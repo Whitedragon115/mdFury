@@ -1,0 +1,44 @@
+{
+  "auth": {
+    "title": "Login to Continue",
+    "subtitle": "Enter your credentials to access the Markdown Previewer",
+    "username": "Username",
+    "usernamePlaceholder": "Enter your username",
+    "password": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "loginButton": "Login",
+    "loginError": "Invalid username or password",
+    "demoAccounts": "Demo Accounts",
+    "adminDemo": "Admin Demo",
+    "userDemo": "User Demo"
+  },
+  "editor": {
+    "title": "Markdown Previewer",
+    "viewModes": {
+      "split": "Split",
+      "edit": "Edit",
+      "preview": "Preview"
+    },
+    "actions": {
+      "copy": "Copy",
+      "download": "Download",
+      "reset": "Reset",
+      "logout": "Logout"
+    },
+    "placeholders": {
+      "markdown": "Enter your markdown here...",
+      "filename": "Enter filename..."
+    },
+    "notifications": {
+      "copied": "Markdown copied to clipboard!",
+      "downloaded": "Markdown file downloaded!",
+      "reset": "Content has been reset!",
+      "loggedOut": "Successfully logged out!"
+    }
+  },
+  "common": {
+    "language": "Language",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode"
+  }
+}
