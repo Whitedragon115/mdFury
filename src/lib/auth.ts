@@ -28,6 +28,7 @@ export interface User {
   backgroundImage?: string
   backgroundBlur?: number
   backgroundBrightness?: number
+  backgroundOpacity?: number
 }
 
 export interface LoginCredentials {
@@ -56,6 +57,7 @@ export class AuthService {
       backgroundImage: user.backgroundImage,
       backgroundBlur: user.backgroundBlur,
       backgroundBrightness: user.backgroundBrightness,
+      backgroundOpacity: user.backgroundOpacity,
       timestamp: Date.now()
     }))
   }
@@ -89,7 +91,8 @@ export class AuthService {
         theme: user.theme as 'light' | 'dark' | 'system',
         backgroundImage: user.backgroundImage || '',
         backgroundBlur: user.backgroundBlur,
-        backgroundBrightness: user.backgroundBrightness
+        backgroundBrightness: user.backgroundBrightness,
+        backgroundOpacity: user.backgroundOpacity
       }
     } catch (error) {
       return null
@@ -135,7 +138,8 @@ export class AuthService {
         theme: user.theme as 'light' | 'dark' | 'system',
         backgroundImage: user.backgroundImage || '',
         backgroundBlur: user.backgroundBlur,
-        backgroundBrightness: user.backgroundBrightness
+        backgroundBrightness: user.backgroundBrightness,
+        backgroundOpacity: user.backgroundOpacity
       }
 
       const token = this.generateToken(userWithoutPassword)
@@ -177,7 +181,8 @@ export class AuthService {
         theme: updatedUser.theme as 'light' | 'dark' | 'system',
         backgroundImage: updatedUser.backgroundImage || '',
         backgroundBlur: updatedUser.backgroundBlur,
-        backgroundBrightness: updatedUser.backgroundBrightness
+        backgroundBrightness: updatedUser.backgroundBrightness,
+        backgroundOpacity: updatedUser.backgroundOpacity
       }
 
       // Generate new token with updated user data
@@ -216,6 +221,35 @@ export class AuthService {
       }))
     } catch (error) {
       return []
+    }
+  }
+
+  static async getUserById(userId: string): Promise<User | null> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId }
+      })
+
+      if (!user) {
+        return null
+      }
+
+      return {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        displayName: user.displayName || user.username,
+        profileImage: user.profileImage || '',
+        language: user.language,
+        theme: user.theme as 'light' | 'dark' | 'system',
+        backgroundImage: user.backgroundImage || '',
+        backgroundBlur: user.backgroundBlur,
+        backgroundBrightness: user.backgroundBrightness,
+        backgroundOpacity: user.backgroundOpacity
+      }
+    } catch (error) {
+      console.error('Failed to get user by ID:', error)
+      return null
     }
   }
 

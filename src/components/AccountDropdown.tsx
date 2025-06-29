@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
+import { useTheme } from 'next-themes'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import SettingsPanel from '@/components/SettingsPanel'
@@ -20,24 +21,11 @@ import {
 export function AccountDropdown() {
   const { t } = useTranslation()
   const { user, logout } = useAuth()
+  const { theme, setTheme } = useTheme()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const [currentTheme, setCurrentTheme] = useState(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('theme')
-        if (saved) return saved as 'light' | 'dark' | 'system'
-        // Set default to dark and save it
-        localStorage.setItem('theme', 'dark')
-        return 'dark'
-      } catch (e) {
-        return 'dark'
-      }
-    }
-    return 'dark'
-  })
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -67,25 +55,8 @@ export function AccountDropdown() {
     setIsOpen(false)
   }
 
-  const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
-    setCurrentTheme(theme)
-    
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else if (theme === 'light') {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
-    } else {
-      // System theme
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      if (prefersDark) {
-        document.documentElement.classList.add('dark')
-      } else {
-        document.documentElement.classList.remove('dark')
-      }
-      localStorage.setItem('theme', 'system')
-    }
+  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
+    setTheme(newTheme)
     setIsOpen(false)
   }
 
@@ -100,7 +71,7 @@ export function AccountDropdown() {
         variant="ghost"
         size="sm"
         onClick={() => setIsOpen(!isOpen)}
-        className="h-10 flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm shadow-sm hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-inset"
+        className="h-10 flex items-center gap-2 hover:bg-slate-100/30 dark:hover:bg-slate-800/50 border border-slate-200 dark:border-slate-700 bg-white/20 dark:bg-slate-900/40 backdrop-blur-sm shadow-sm hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-inset"
       >
         {user.profileImage ? (
           <img 
@@ -155,7 +126,7 @@ export function AccountDropdown() {
                   <button
                     onClick={() => handleThemeChange('light')}
                     className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
-                      currentTheme === 'light' 
+                      theme === 'light' 
                         ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
@@ -166,7 +137,7 @@ export function AccountDropdown() {
                   <button
                     onClick={() => handleThemeChange('dark')}
                     className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
-                      currentTheme === 'dark' 
+                      theme === 'dark' 
                         ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
@@ -177,7 +148,7 @@ export function AccountDropdown() {
                   <button
                     onClick={() => handleThemeChange('system')}
                     className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
-                      currentTheme === 'system' 
+                      theme === 'system' 
                         ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}

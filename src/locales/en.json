@@ -101,7 +101,7 @@
     "backgroundImagePlaceholder": "Enter background image URL",
     "backgroundImageDesc": "Set a custom background image for the interface",
     "backgroundBlur": "Background Blur",
-    "backgroundBrightness": "Background Brightness",
+    "backgroundBrightness": "Background Brightness (lower = darker)",
     "themes": {
       "system": "System",
       "light": "Light",

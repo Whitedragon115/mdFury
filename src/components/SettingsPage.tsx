@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
+import { useTheme } from 'next-themes'
 import toast from 'react-hot-toast'
 import { useAuth } from '@/contexts/AuthContext'
 import { PageLayout } from '@/components/PageLayout'
@@ -17,6 +18,7 @@ import LoginForm from '@/components/LoginForm'
 export default function SettingsPage() {
   const { t, i18n } = useTranslation()
   const { user, updateUser } = useAuth()
+  const { theme, setTheme } = useTheme()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -34,10 +36,10 @@ export default function SettingsPage() {
         email: user.email || '',
         profileImage: user.profileImage || '',
         language: user.language || 'en',
-        theme: user.theme || 'system'
+        theme: (theme as 'light' | 'dark' | 'system') || 'system'
       })
     }
-  }, [user])
+  }, [user, theme])
 
   // If user is not authenticated, show login form
   if (!user) {
@@ -62,24 +64,9 @@ export default function SettingsPage() {
           i18n.changeLanguage(formData.language)
         }
 
-        // Update theme if changed
-        if (formData.theme !== user.theme) {
-          if (formData.theme === 'dark') {
-            document.documentElement.classList.add('dark')
-            localStorage.setItem('theme', 'dark')
-          } else if (formData.theme === 'light') {
-            document.documentElement.classList.remove('dark')
-            localStorage.setItem('theme', 'light')
-          } else {
-            // System theme
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-            if (prefersDark) {
-              document.documentElement.classList.add('dark')
-            } else {
-              document.documentElement.classList.remove('dark')
-            }
-            localStorage.setItem('theme', 'system')
-          }
+        // Update theme if changed using next-themes
+        if (formData.theme !== theme) {
+          setTheme(formData.theme)
         }
 
         // Re-login to update the user context
@@ -118,7 +105,7 @@ export default function SettingsPage() {
 
         <div className="grid gap-6 max-w-2xl">
         {/* Profile Section */}
-        <Card className="p-6 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border-slate-200 dark:border-slate-700 hover-lift transition-all animate-fade-in">
+        <Card className="p-6 bg-white/20 dark:bg-slate-900/30 backdrop-blur-sm border-slate-200 dark:border-slate-700 hover-lift transition-all animate-fade-in">
           <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-6 flex items-center gap-2">
             <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
               <User className="w-5 h-5 text-white" />
@@ -188,7 +175,7 @@ export default function SettingsPage() {
         </Card>
 
         {/* Preferences Section */}
-        <Card className="p-6 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border-slate-200 dark:border-slate-700 hover-lift transition-all animate-fade-in" style={{ animationDelay: '200ms' }}>
+        <Card className="p-6 bg-white/20 dark:bg-slate-900/30 backdrop-blur-sm border-slate-200 dark:border-slate-700 hover-lift transition-all animate-fade-in" style={{ animationDelay: '200ms' }}>
           <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200 mb-6 flex items-center gap-2">
             <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg">
               <Settings className="w-5 h-5 text-white" />

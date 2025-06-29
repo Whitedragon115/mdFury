@@ -9,7 +9,7 @@ export default function PreviewRedirect() {
   useEffect(() => {
     if (binId && typeof binId === 'string') {
       // Redirect to the main bin page (which shows preview by default)
-      window.location.href = `/${binId}`
+      window.location.href = `/bin/${binId}`
     }
   }, [binId])
 

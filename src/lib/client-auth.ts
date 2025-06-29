@@ -10,6 +10,7 @@ export interface User {
   backgroundImage?: string
   backgroundBlur?: number
   backgroundBrightness?: number
+  backgroundOpacity?: number
 }
 
 export interface LoginCredentials {
@@ -87,5 +88,47 @@ export class ClientAuthService {
       console.error('Token decode error:', error)
     }
     return null
+  }
+
+  static getAuthHeaders(): { [key: string]: string } {
+    const token = localStorage.getItem('auth-token')
+    return token ? { 'Authorization': `Bearer ${token}` } : {}
+  }
+
+  static async updateProfile(updates: Partial<Omit<User, 'id' | 'username' | 'email'>>): Promise<{ success: boolean; user?: User; token?: string; message?: string }> {
+    try {
+      const response = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...this.getAuthHeaders(),
+        },
+        body: JSON.stringify(updates),
+      })
+
+      return await response.json()
+    } catch (error) {
+      console.error('Update profile error:', error)
+      return {
+        success: false,
+        message: 'Network error occurred'
+      }
+    }
+  }
+
+  static async getUserProfile(userId: string): Promise<{ success: boolean; user?: User; message?: string }> {
+    try {
+      const response = await fetch(`/api/auth/profile/${userId}`, {
+        headers: this.getAuthHeaders(),
+      })
+
+      return await response.json()
+    } catch (error) {
+      console.error('Get user profile error:', error)
+      return {
+        success: false,
+        message: 'Network error occurred'
+      }
+    }
   }
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useTheme } from 'next-themes'
 import toast from 'react-hot-toast'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
@@ -11,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Slider } from '@/components/ui/slider'
 import BackgroundLayer from '@/components/BackgroundLayer'
 import { AuthService } from '@/lib/auth'
+import { ClientAuthService } from '@/lib/client-auth'
 import { 
   Settings, 
   User, 
@@ -32,6 +34,7 @@ interface SettingsPanelProps {
 export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const { t, i18n } = useTranslation()
   const { user, updateUser } = useAuth()
+  const { theme, setTheme } = useTheme()
   const [activeCategory, setActiveCategory] = useState('profile')
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -42,7 +45,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     theme: 'system' as 'light' | 'dark' | 'system',
     backgroundImage: '',
     backgroundBlur: 0,
-    backgroundBrightness: 50
+    backgroundBrightness: 70 // Increase default brightness
   })
 
   useEffect(() => {
@@ -52,13 +55,13 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         email: user.email || '',
         profileImage: user.profileImage || '',
         language: user.language || 'en',
-        theme: user.theme || 'system',
+        theme: (theme as 'light' | 'dark' | 'system') || 'system',
         backgroundImage: user.backgroundImage || '',
         backgroundBlur: user.backgroundBlur ?? 0, // Use nullish coalescing to handle 0 properly
-        backgroundBrightness: user.backgroundBrightness ?? 50
+        backgroundBrightness: user.backgroundBrightness ?? 70
       })
     }
-  }, [user])
+  }, [user, theme])
 
   // Apply background settings will now be handled by BackgroundLayer component
   // Remove the direct document.body manipulation
@@ -77,7 +80,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
     setIsLoading(true)
     try {
-      const result = await AuthService.updateUserProfile(user.id, {
+      const result = await ClientAuthService.updateProfile({
         displayName: formData.displayName,
         profileImage: formData.profileImage,
         language: formData.language,
@@ -98,24 +101,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           i18n.changeLanguage(formData.language)
         }
 
-        // Update theme if changed
-        if (formData.theme !== user.theme) {
-          if (formData.theme === 'dark') {
-            document.documentElement.classList.add('dark')
-            localStorage.setItem('theme', 'dark')
-          } else if (formData.theme === 'light') {
-            document.documentElement.classList.remove('dark')
-            localStorage.setItem('theme', 'light')
-          } else {
-            // System theme
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-            if (prefersDark) {
-              document.documentElement.classList.add('dark')
-            } else {
-              document.documentElement.classList.remove('dark')
-            }
-            localStorage.setItem('theme', 'system')
-          }
+        // Update theme if changed using next-themes
+        if (formData.theme !== theme) {
+          setTheme(formData.theme)
         }
 
         updateUser(result.user)

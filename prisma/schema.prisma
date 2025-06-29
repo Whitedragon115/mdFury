@@ -21,7 +21,8 @@ model User {
   theme                String     @default("system") // 'light' | 'dark' | 'system'
   backgroundImage      String?
   backgroundBlur       Int        @default(0)
-  backgroundBrightness Int        @default(50)
+  backgroundBrightness Int        @default(70)
+  backgroundOpacity    Float      @default(0.1)
   createdAt            DateTime   @default(now())
   lastLogin            DateTime   @default(now())
   updatedAt            DateTime   @updatedAt

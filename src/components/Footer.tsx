@@ -36,7 +36,7 @@ export function Footer() {
   }, [])
 
   return (
-    <footer className="border-t border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm mt-auto">
+    <footer className="border-t border-slate-200 dark:border-slate-700 bg-white/20 dark:bg-slate-900/40 backdrop-blur-sm mt-auto">
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col items-center justify-center space-y-4">
           {/* Links Row */}

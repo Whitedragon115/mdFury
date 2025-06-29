@@ -18,7 +18,7 @@ export function PageLayout({ children, showHeader = true }: PageLayoutProps) {
   return (
     <div className="min-h-screen transition-all duration-500">
       {showHeader && (
-        <header className="border-b border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-10">
+        <header className="border-b border-slate-200 dark:border-slate-700 bg-white/20 dark:bg-slate-900/40 backdrop-blur-sm sticky top-0 z-10">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">

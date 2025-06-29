@@ -95,7 +95,7 @@ export default function DocumentsPage() {
 
   const handleEdit = (doc: SavedMarkdown) => {
     const binId = doc.binId || doc.id
-    router.push(`/${binId}/edit`)
+    router.push(`/bin/${binId}/edit`)
   }
 
   const handleDelete = async (docId: string) => {
@@ -183,7 +183,7 @@ export default function DocumentsPage() {
       </div>
 
       {/* Search */}
-      <Card className="p-4 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border-slate-200 dark:border-slate-700 animate-fade-in hover-lift transition-all">
+      <Card className="p-4 bg-white/20 dark:bg-slate-900/30 backdrop-blur-sm border-slate-200 dark:border-slate-700 animate-fade-in hover-lift transition-all">
         <div className="flex gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -203,7 +203,7 @@ export default function DocumentsPage() {
 
       {/* Documents List */}
       {documents.length === 0 ? (
-        <Card className="p-12 text-center bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border-slate-200 dark:border-slate-700 animate-bounce-in">
+        <Card className="p-12 text-center bg-white/20 dark:bg-slate-900/30 backdrop-blur-sm border-slate-200 dark:border-slate-700 animate-bounce-in">
           <FolderOpen className="w-16 h-16 mx-auto text-slate-400 mb-4" />
           <h3 className="text-xl font-semibold text-slate-600 dark:text-slate-400 mb-2">
             {t('documents.empty')}
@@ -224,7 +224,7 @@ export default function DocumentsPage() {
           {documents.map((doc, index) => (
             <Card 
               key={doc.id} 
-              className="p-6 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border-slate-200 dark:border-slate-700 card-hover transition-all"
+              className="p-6 bg-white/20 dark:bg-slate-900/30 backdrop-blur-sm border-slate-200 dark:border-slate-700 card-hover transition-all"
               style={{ 
                 animation: `fade-in-up 0.4s ease-out forwards ${index * 100}ms`
               }}
