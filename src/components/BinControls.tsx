@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -51,11 +51,39 @@ export default function BinControls({
 }: BinControlsProps) {
   const { t } = useTranslation()
   const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordField, setShowPasswordField] = useState(hasPassword || !!password)
+
+  // Update showPasswordField when hasPassword or password changes
+  useEffect(() => {
+    setShowPasswordField(hasPassword || !!password)
+  }, [hasPassword, password])
 
   const handleTagsInput = (value: string) => {
     const newTags = value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
     onTagsChange(newTags)
   }
+
+  const togglePasswordProtection = () => {
+    const isPlaceholder = password === '••••••••'
+    const actuallyHasPassword = hasPassword || (password && !isPlaceholder)
+    
+    if (actuallyHasPassword) {
+      // Remove password protection
+      onPasswordChange('')
+      setShowPasswordField(false)
+      setShowPassword(false)
+    } else {
+      // Add password protection
+      if (isPlaceholder) {
+        // Clear placeholder and show field for new password
+        onPasswordChange('')
+      }
+      setShowPasswordField(true)
+      setShowPassword(false)
+    }
+  }
+
+  const currentlyHasPassword = hasPassword || (password && password !== '••••••••')
 
   return (
     <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-lg p-4 shadow-lg space-y-4">
@@ -141,34 +169,45 @@ export default function BinControls({
           {/* Password Protection */}
           <div className="flex items-center gap-2">
             <Button
-              variant={hasPassword ? "default" : "outline"}
+              variant={currentlyHasPassword ? "default" : "outline"}
               size="sm"
-              onClick={() => {
-                if (hasPassword) {
-                  onPasswordChange('')
-                } else {
-                  setShowPassword(true)
-                }
-              }}
+              onClick={togglePasswordProtection}
               className="h-8 px-3"
             >
               <Lock className="w-3 h-3 mr-1" />
-              {hasPassword ? 'Protected' : 'No Password'}
+              {currentlyHasPassword ? 'Protected' : 'No Password'}
             </Button>
 
-            {(hasPassword || showPassword) && (
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => onPasswordChange(e.target.value)}
-                placeholder="Enter password..."
-                className="h-8 text-sm w-32"
-                onBlur={() => {
-                  if (!password) {
-                    setShowPassword(false)
-                  }
-                }}
-              />
+            {showPasswordField && (
+              <div className="flex items-center gap-1">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => onPasswordChange(e.target.value)}
+                  placeholder={password === '••••••••' ? 'Change password...' : 'Enter password...'}
+                  className="h-8 text-sm w-32"
+                  onFocus={() => {
+                    // Clear placeholder when user starts typing
+                    if (password === '••••••••') {
+                      onPasswordChange('')
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="h-8 w-8 p-0"
+                  disabled={password === '••••••••'}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-3 h-3" />
+                  ) : (
+                    <Eye className="w-3 h-3" />
+                  )}
+                </Button>
+              </div>
             )}
           </div>
 

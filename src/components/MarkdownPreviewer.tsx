@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button'
 import { AccountDropdown } from '@/components/AccountDropdown'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import BinControls from '@/components/BinControls'
-import { MarkdownStorageService } from '@/lib/markdown-storage'
+import { ClientMarkdownService, SavedMarkdown } from '@/lib/client-markdown'
 import { useAuth } from '@/contexts/AuthContext'
 import { 
   FileText, 
@@ -75,7 +75,7 @@ You can add math expressions like \`E = mc²\`
 **Start editing** in the left panel to see the magic happen! ✨
 `
 
-export default function MarkdownPreviewer() {
+export default function MarkdownPreviewer({ initialDocument }: { initialDocument?: SavedMarkdown | null }) {
   const { t } = useTranslation()
   const { user, logout } = useAuth()
   const searchParams = useSearchParams()
@@ -85,7 +85,7 @@ export default function MarkdownPreviewer() {
   const [currentDocTitle, setCurrentDocTitle] = useState('')
   const [currentBinId, setCurrentBinId] = useState('')
   const [currentTags, setCurrentTags] = useState<string[]>([])
-  const [isPublic, setIsPublic] = useState(false)
+  const [isPublic, setIsPublic] = useState(true)
   const [binPassword, setBinPassword] = useState('')
   const [viewMode, setViewMode] = useState<'split' | 'edit' | 'preview'>('split')
   const [isClient, setIsClient] = useState(false)
@@ -94,50 +94,64 @@ export default function MarkdownPreviewer() {
 
   // Generate random bin ID
   const generateBinId = () => {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-    let result = ''
-    for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
-    setCurrentBinId(result)
+    return ClientMarkdownService.generateId()
+  }
+
+  // Set generated bin ID to state
+  const setGeneratedBinId = () => {
+    setCurrentBinId(generateBinId())
   }
 
   useEffect(() => {
     setIsClient(true)
-    // Generate initial bin ID
-    generateBinId()
+    // Don't generate initial bin ID - only when user clicks save
   }, [])
 
-  // Load document if documentId is provided
+  // Load document if documentId is provided or if initialDocument is passed
   useEffect(() => {
-    if (documentId && user) {
+    if (initialDocument) {
+      // Load from initialDocument prop (for edit page)
+      setMarkdown(initialDocument.content)
+      setCurrentDocId(initialDocument.id)
+      setCurrentDocTitle(initialDocument.title)
+      setCurrentBinId(initialDocument.binId || initialDocument.id)
+      setCurrentTags(initialDocument.tags || [])
+      setIsPublic(initialDocument.isPublic)
+      // Show placeholder for password if document has one, but don't show actual password
+      setBinPassword(initialDocument.password ? '••••••••' : '')
+    } else if (documentId && user) {
       loadDocument(documentId)
-    } else if (!documentId) {
+    } else if (!documentId && !initialDocument) {
       // Reset to initial state when creating new document
       setMarkdown(initialMarkdown)
       setCurrentDocId(undefined)
       setCurrentDocTitle('')
       setCurrentBinId('')
       setCurrentTags([])
-      setIsPublic(false)
+      setIsPublic(true) // Default to public
       setBinPassword('')
-      generateBinId()
+      // Don't generate bin ID until save
     }
-  }, [documentId, user])
+  }, [documentId, user, initialDocument])
 
   const loadDocument = async (docId: string) => {
     if (!user) return
     
     try {
-      const doc = await MarkdownStorageService.getMarkdownById(docId, user.id)
+      // Note: This needs to be adjusted since we don't have getMarkdownById in client service
+      // For now, we'll get all user markdowns and find the one we need
+      const markdowns = await ClientMarkdownService.getUserMarkdowns()
+      const doc = markdowns.find(m => m.id === docId)
+      
       if (doc) {
         setMarkdown(doc.content)
         setCurrentDocId(doc.id)
         setCurrentDocTitle(doc.title)
-        setCurrentBinId(doc.id) // Use document ID as bin ID
+        setCurrentBinId(doc.binId || doc.id) // Use binId if available, fallback to id
         setCurrentTags(doc.tags || [])
         setIsPublic(doc.isPublic || false)
-        setBinPassword('') // Don't load password for security
+        // Show placeholder for password if document has one, but don't show actual password
+        setBinPassword(doc.password ? '••••••••' : '')
       } else {
         toast.error('Document not found')
         // Could redirect or show error
@@ -171,12 +185,12 @@ export default function MarkdownPreviewer() {
   }
 
   const shareDocument = async () => {
-    if (!currentDocId) {
+    if (!currentBinId) {
       toast.error('Please save the document first to get a share link')
       return
     }
 
-    const previewUrl = `${window.location.origin}/${currentDocId}`
+    const previewUrl = `${window.location.origin}/${currentBinId}`
     
     try {
       await navigator.clipboard.writeText(previewUrl)
@@ -197,60 +211,81 @@ export default function MarkdownPreviewer() {
       return
     }
 
+    // Generate bin ID if not provided by user
+    let binId = currentBinId.trim()
+    if (!binId) {
+      binId = generateBinId()
+      setCurrentBinId(binId)
+    }
+
+    // Validate binId format
+    const validation = ClientMarkdownService.validateBinId(binId)
+    if (!validation.valid) {
+      toast.error(validation.message || 'Invalid bin ID format')
+      return
+    }
+
     setIsSaving(true)
     try {
+      // Handle password - if it's placeholder, don't include it in update
+      let passwordToSave: string | undefined = undefined
+      if (binPassword && binPassword !== '••••••••') {
+        passwordToSave = binPassword
+      } else if (binPassword === '') {
+        passwordToSave = '' // Explicitly remove password
+      }
+      // If binPassword is '••••••••', we don't include password in the update
+
       const saveData = {
         title: currentDocTitle,
         content: markdown,
         tags: currentTags,
         isPublic: isPublic,
-        binId: currentBinId || undefined,
-        password: binPassword || undefined
+        binId: binId,
+        ...(passwordToSave !== undefined && { password: passwordToSave })
       }
 
       if (currentDocId) {
         // Update existing document
-        const result = await MarkdownStorageService.updateMarkdown(currentDocId, user.id, saveData)
+        const result = await ClientMarkdownService.updateMarkdown(currentDocId, saveData)
         
         if (result.success) {
-          const previewUrl = `${window.location.origin}/${currentBinId}`
-          toast.success(
-            <div>
-              <p>{t('editor.notifications.updated')}</p>
-              <button
-                onClick={() => navigator.clipboard.writeText(previewUrl)}
-                className="text-xs underline text-blue-600 hover:text-blue-800"
-              >
-                Copy preview link: /{currentBinId}
-              </button>
-            </div>
-          )
+          // Update URL if binId changed
+          if (result.markdown && result.markdown.binId) {
+            setCurrentBinId(result.markdown.binId)
+            window.history.replaceState(null, '', `/${result.markdown.binId}/edit`)
+          }
+          const previewUrl = `${window.location.origin}/${binId}`
+          // Auto copy to clipboard
+          try {
+            await navigator.clipboard.writeText(previewUrl)
+            toast.success(t('editor.notifications.updated'))
+          } catch (err) {
+            toast.success(t('editor.notifications.updated'))
+          }
         } else {
           toast.error(result.message || 'Failed to update document')
         }
       } else {
         // Create new document
-        const result = await MarkdownStorageService.saveMarkdown(user.id, saveData)
+        const result = await ClientMarkdownService.saveMarkdown(saveData)
         
         if (result.success && result.markdown) {
           setCurrentDocId(result.markdown.id)
-          setCurrentBinId(result.markdown.id)
-          // Update URL without navigation and show preview link
-          window.history.replaceState(null, '', `/?doc=${result.markdown.id}`)
-          const previewUrl = `${window.location.origin}/${result.markdown.id}`
-          toast.success(
-            <div>
-              <p>{t('editor.notifications.saved')}</p>
-              <button
-                onClick={() => navigator.clipboard.writeText(previewUrl)}
-                className="text-xs underline text-blue-600 hover:text-blue-800"
-              >
-                Copy preview link: /{result.markdown.id}
-              </button>
-            </div>
-          )
+          setCurrentBinId(result.markdown.binId || result.markdown.id)
+          // Redirect to edit page
+          const binId = result.markdown.binId || result.markdown.id
+          window.location.href = `/${binId}/edit`
+          const previewUrl = `${window.location.origin}/${binId}`
+          // Auto copy view link to clipboard
+          try {
+            await navigator.clipboard.writeText(previewUrl)
+            toast.success(t('editor.notifications.saved'))
+          } catch (err) {
+            toast.success(t('editor.notifications.saved'))
+          }
         } else {
-          toast.error('Failed to save document')
+          toast.error(result.message || 'Failed to save document')
         }
       }
     } catch (error) {
@@ -266,9 +301,9 @@ export default function MarkdownPreviewer() {
     setCurrentDocId(undefined)
     setCurrentDocTitle('')
     setCurrentTags([])
-    setIsPublic(false)
+    setIsPublic(true) // Default to public
     setBinPassword('')
-    generateBinId()
+    setCurrentBinId('') // Don't generate ID until save
     window.history.replaceState(null, '', '/')
   }
 
@@ -383,7 +418,7 @@ export default function MarkdownPreviewer() {
               <span className="hidden sm:inline">{t('editor.actions.download')}</span>
               <span className="sm:hidden">Download</span>
             </Button>
-            {currentDocId && (
+            {currentBinId && (
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -416,7 +451,7 @@ export default function MarkdownPreviewer() {
               onPublicChange={setIsPublic}
               onPasswordChange={setBinPassword}
               onSave={handleSave}
-              onGenerateId={generateBinId}
+              onGenerateId={setGeneratedBinId}
             />
           </div>
         )}

@@ -3,8 +3,10 @@
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { MarkdownStorageService } from '@/lib/markdown-storage'
-import { AuthProvider } from '@/contexts/AuthContext'
+import { ClientMarkdownService } from '@/lib/client-markdown'
+import { AuthProvider, useAuth } from '@/contexts/AuthContext'
+import PasswordPage from '@/components/PasswordPage'
+import LoginModal from '@/components/LoginModal'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
@@ -15,13 +17,13 @@ import { Input } from '@/components/ui/input'
 import { 
   FileText, 
   ArrowLeft, 
-  Lock, 
-  Unlock, 
+  Lock,
   Eye,
   EyeOff,
   Share2,
   Copy,
-  Download
+  Download,
+  Edit
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -34,18 +36,23 @@ interface BinDocument {
   hasPassword: boolean
   createdAt: string
   updatedAt: string
+  userId?: string // Add userId to check ownership
 }
 
-export default function BinPreviewPage() {
+function BinPreviewContent() {
   const { binId } = useParams()
   const router = useRouter()
   const { t } = useTranslation()
+  const { user } = useAuth()
   const [binDocument, setBinDocument] = useState<BinDocument | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [passwordRequired, setPasswordRequired] = useState(false)
   const [password, setPassword] = useState('')
+  const [passwordError, setPasswordError] = useState<string | null>(null)
   const [passwordAttempting, setPasswordAttempting] = useState(false)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [accessDenied, setAccessDenied] = useState(false)
 
   useEffect(() => {
     if (binId && typeof binId === 'string') {
@@ -56,10 +63,12 @@ export default function BinPreviewPage() {
   const loadDocument = async (id: string, inputPassword?: string) => {
     setLoading(true)
     setError(null)
+    setPasswordError(null)
+    setAccessDenied(false)
     
     try {
-      // Try to get the document (this would be a public API call in a real app)
-      const result = await MarkdownStorageService.getPublicMarkdown(id, inputPassword)
+      // Try to get the document using the client API
+      const result = await ClientMarkdownService.getPublicMarkdown(id, inputPassword)
       
       if (result.success && result.markdown) {
         setBinDocument({
@@ -70,27 +79,73 @@ export default function BinPreviewPage() {
           isPublic: result.markdown.isPublic || false,
           hasPassword: !!result.markdown.password,
           createdAt: result.markdown.createdAt,
-          updatedAt: result.markdown.updatedAt
+          updatedAt: result.markdown.updatedAt,
+          userId: result.markdown.userId
         })
         setPasswordRequired(false)
+        setPasswordError(null)
+        setShowLoginModal(false)
+        setAccessDenied(false)
+      } else if (result.requiresAuth) {
+        // Document is private and requires authentication
+        setShowLoginModal(true)
+        setPasswordRequired(false)
+        setPasswordError(null)
+        setAccessDenied(false)
+      } else if (result.accessDenied) {
+        // User is authenticated but doesn't have access
+        setAccessDenied(true)
+        setShowLoginModal(false)
+        setPasswordRequired(false)
+        setPasswordError(null)
       } else if (result.passwordRequired) {
         setPasswordRequired(true)
+        setPasswordError(null)
+        setShowLoginModal(false)
+        setAccessDenied(false)
+        // If we were trying a password and got password required, it means wrong password
+        if (inputPassword) {
+          setPasswordError(result.message || 'Incorrect password. Please try again.')
+        }
       } else {
         setError(result.message || 'Document not found')
+        setPasswordRequired(false)
+        setShowLoginModal(false)
+        setAccessDenied(false)
       }
     } catch (err) {
-      setError('Failed to load document')
+      if (inputPassword && passwordRequired) {
+        setPasswordError('Incorrect password. Please try again.')
+      } else {
+        setError('Failed to load document')
+      }
+      setShowLoginModal(false)
+      setAccessDenied(false)
     } finally {
       setLoading(false)
       setPasswordAttempting(false)
     }
   }
 
-  const handlePasswordSubmit = async () => {
-    if (!password.trim() || !binId || typeof binId !== 'string') return
+  const handlePasswordSubmit = (inputPassword: string) => {
+    if (!binId || typeof binId !== 'string') return
     
     setPasswordAttempting(true)
-    await loadDocument(binId, password)
+    setPassword(inputPassword)
+    loadDocument(binId, inputPassword)
+  }
+
+  const handleBackToHome = () => {
+    router.push('/')
+  }
+
+  const handleLoginSuccess = () => {
+    setShowLoginModal(false)
+    setAccessDenied(false)
+    // Reload the document now that user is authenticated
+    if (binId && typeof binId === 'string') {
+      loadDocument(binId)
+    }
   }
 
   const copyToClipboard = async () => {
@@ -145,7 +200,6 @@ export default function BinPreviewPage() {
 
   if (error) {
     return (
-      <AuthProvider>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
           <div className="text-center max-w-md">
             <FileText className="w-16 h-16 text-slate-400 mx-auto mb-4" />
@@ -161,71 +215,41 @@ export default function BinPreviewPage() {
             </Button>
           </div>
         </div>
-      </AuthProvider>
     )
   }
 
   if (passwordRequired) {
     return (
-      <AuthProvider>
+        <PasswordPage
+          onPasswordSubmit={handlePasswordSubmit}
+          onBack={handleBackToHome}
+          loading={passwordAttempting}
+          error={passwordError || undefined}
+        />
+    )
+  }
+
+  if (accessDenied) {
+    return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
-          <Card className="w-full max-w-md p-6">
-            <div className="text-center mb-6">
-              <Lock className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-              <h1 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">
-                Password Required
-              </h1>
-              <p className="text-slate-600 dark:text-slate-400">
-                This document is password protected. Please enter the password to view.
-              </p>
-            </div>
-            
-            <div className="space-y-4">
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter password..."
-                onKeyPress={(e) => e.key === 'Enter' && handlePasswordSubmit()}
-                disabled={passwordAttempting}
-              />
-              
-              <div className="flex gap-3">
-                <Button 
-                  variant="outline" 
-                  onClick={() => router.push('/')}
-                  className="flex-1"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back
-                </Button>
-                <Button 
-                  onClick={handlePasswordSubmit}
-                  disabled={!password.trim() || passwordAttempting}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700"
-                >
-                  {passwordAttempting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Checking...
-                    </>
-                  ) : (
-                    <>
-                      <Unlock className="w-4 h-4 mr-2" />
-                      Access
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </Card>
+          <div className="text-center max-w-md">
+            <Lock className="w-16 h-16 text-red-400 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-2">
+              Access Denied
+            </h1>
+            <p className="text-slate-600 dark:text-slate-400 mb-6">
+              You do not have permission to access this document.
+            </p>
+            <Button onClick={() => router.push('/')} className="bg-blue-600 hover:bg-blue-700">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Go to Editor
+            </Button>
+          </div>
         </div>
-      </AuthProvider>
     )
   }
 
   return (
-    <AuthProvider>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         {/* Header */}
         <header className="border-b border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-10">
@@ -253,6 +277,12 @@ export default function BinPreviewPage() {
               </div>
               
               <div className="flex items-center gap-3">
+                {user && binDocument && user.id === binDocument.userId && (
+                  <Button variant="default" size="sm" onClick={() => router.push(`/${binId}/edit`)}>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit
+                  </Button>
+                )}
                 <Button variant="outline" size="sm" onClick={shareDocument}>
                   <Share2 className="w-4 h-4 mr-2" />
                   Share
@@ -332,7 +362,23 @@ export default function BinPreviewPage() {
             </>
           )}
         </main>
+
+        {/* Login Modal */}
+        <LoginModal
+          isOpen={showLoginModal}
+          onClose={() => setShowLoginModal(false)}
+          onLoginSuccess={handleLoginSuccess}
+          title="Private Document"
+          message="This document is private. Please login to view it."
+        />
       </div>
+  )
+}
+
+export default function BinPreviewPage() {
+  return (
+    <AuthProvider>
+      <BinPreviewContent />
     </AuthProvider>
   )
 }

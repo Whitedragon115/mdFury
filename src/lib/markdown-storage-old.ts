@@ -34,30 +34,7 @@ export interface UpdateMarkdownData {
 
 export class MarkdownStorageService {
   static generateId(): string {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-    let result = ''
-    for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length))
-    }
-    return result
-  }
-
-  static validateBinId(binId: string): { valid: boolean; message?: string } {
-    if (!binId) {
-      return { valid: false, message: 'Bin ID is required' }
-    }
-    
-    if (binId.length > 128) {
-      return { valid: false, message: 'Bin ID must be 128 characters or less' }
-    }
-    
-    // Only allow A-Z, a-z, 0-9, and hyphen (-)
-    const validPattern = /^[A-Za-z0-9-]+$/
-    if (!validPattern.test(binId)) {
-      return { valid: false, message: 'Bin ID can only contain letters, numbers, and hyphens' }
-    }
-    
-    return { valid: true }
+    return Date.now().toString(36) + Math.random().toString(36).substr(2)
   }
 
   static async getUserMarkdowns(userId: string): Promise<SavedMarkdown[]> {
@@ -75,7 +52,7 @@ export class MarkdownStorageService {
         tags: doc.tags ? JSON.parse(doc.tags) : [],
         isPublic: doc.isPublic,
         binId: doc.binId,
-        password: doc.password || undefined,
+        password: doc.password,
         createdAt: doc.createdAt.toISOString(),
         updatedAt: doc.updatedAt.toISOString()
       }))
@@ -106,7 +83,7 @@ export class MarkdownStorageService {
         tags: markdown.tags ? JSON.parse(markdown.tags) : [],
         isPublic: markdown.isPublic,
         binId: markdown.binId,
-        password: markdown.password || undefined,
+        password: markdown.password,
         createdAt: markdown.createdAt.toISOString(),
         updatedAt: markdown.updatedAt.toISOString()
       }
@@ -119,15 +96,6 @@ export class MarkdownStorageService {
   static async saveMarkdown(userId: string, data: CreateMarkdownData): Promise<{ success: boolean; markdown?: SavedMarkdown; message?: string }> {
     try {
       const binId = data.binId || this.generateId()
-      
-      // Validate binId format
-      const validation = this.validateBinId(binId)
-      if (!validation.valid) {
-        return {
-          success: false,
-          message: validation.message
-        }
-      }
       
       // Check if binId already exists (search both id and binId fields)
       const existingDoc = await prisma.markdown.findFirst({
@@ -154,7 +122,7 @@ export class MarkdownStorageService {
           content: data.content,
           tags: data.tags ? JSON.stringify(data.tags) : null,
           isPublic: data.isPublic !== false, // Default to public
-          password: data.password || null
+          password: data.password
         }
       })
       
@@ -168,7 +136,7 @@ export class MarkdownStorageService {
           tags: newMarkdown.tags ? JSON.parse(newMarkdown.tags) : [],
           isPublic: newMarkdown.isPublic,
           binId: newMarkdown.binId,
-          password: newMarkdown.password || undefined,
+          password: newMarkdown.password,
           createdAt: newMarkdown.createdAt.toISOString(),
           updatedAt: newMarkdown.updatedAt.toISOString()
         }
@@ -196,17 +164,8 @@ export class MarkdownStorageService {
         }
       }
 
-      // If binId is being updated, check for conflicts and validate format
+      // If binId is being updated, check for conflicts
       if (data.binId && data.binId !== existingDoc.binId) {
-        // Validate binId format
-        const validation = this.validateBinId(data.binId)
-        if (!validation.valid) {
-          return {
-            success: false,
-            message: validation.message
-          }
-        }
-        
         const conflictDoc = await prisma.markdown.findFirst({
           where: {
             OR: [
@@ -233,7 +192,7 @@ export class MarkdownStorageService {
           ...(data.tags !== undefined && { tags: JSON.stringify(data.tags) }),
           ...(data.isPublic !== undefined && { isPublic: data.isPublic }),
           ...(data.binId !== undefined && { binId: data.binId }),
-          ...(data.password !== undefined && { password: data.password || null })
+          ...(data.password !== undefined && { password: data.password })
         }
       })
       
@@ -247,7 +206,7 @@ export class MarkdownStorageService {
           tags: updatedMarkdown.tags ? JSON.parse(updatedMarkdown.tags) : [],
           isPublic: updatedMarkdown.isPublic,
           binId: updatedMarkdown.binId,
-          password: updatedMarkdown.password || undefined,
+          password: updatedMarkdown.password,
           createdAt: updatedMarkdown.createdAt.toISOString(),
           updatedAt: updatedMarkdown.updatedAt.toISOString()
         }
@@ -301,7 +260,7 @@ export class MarkdownStorageService {
         tags: doc.tags ? JSON.parse(doc.tags) : [],
         isPublic: doc.isPublic,
         binId: doc.binId,
-        password: doc.password || undefined,
+        password: doc.password,
         createdAt: doc.createdAt.toISOString(),
         updatedAt: doc.updatedAt.toISOString()
       }))
@@ -311,13 +270,11 @@ export class MarkdownStorageService {
     }
   }
 
-  static async getPublicMarkdown(binId: string, password?: string, userId?: string): Promise<{ 
+  static async getPublicMarkdown(binId: string, password?: string): Promise<{ 
     success: boolean; 
     markdown?: SavedMarkdown; 
     message?: string;
     passwordRequired?: boolean;
-    requiresAuth?: boolean;
-    accessDenied?: boolean;
   }> {
     try {
       // Search by binId first, then fall back to id for backwards compatibility
@@ -337,41 +294,27 @@ export class MarkdownStorageService {
         }
       }
 
-      // Step 1: Check if document is private and requires authentication
-      if (!markdown.isPublic) {
-        if (!userId) {
-          return {
-            success: false,
-            requiresAuth: true,
-            message: 'This document is private. Please login to view it.'
-          }
-        }
-        
-        // Step 2: Check if user has permission to access private document
-        if (userId !== markdown.userId) {
-          return {
-            success: false,
-            accessDenied: true,
-            message: 'You do not have permission to access this document.'
-          }
+      // Check if document is public or has password protection
+      if (!markdown.isPublic && !markdown.password) {
+        return {
+          success: false,
+          message: 'Document is private'
         }
       }
-      
-      // Step 3: Check password protection (only after auth and permission checks)
+
+      // If document has password protection
       if (markdown.password) {
         if (!password) {
           return {
             success: false,
-            passwordRequired: true,
-            message: 'This document is password protected.'
+            passwordRequired: true
           }
         }
         
         if (password !== markdown.password) {
           return {
             success: false,
-            passwordRequired: true,
-            message: 'Incorrect password. Please try again.'
+            message: 'Incorrect password'
           }
         }
       }
@@ -386,7 +329,7 @@ export class MarkdownStorageService {
           tags: markdown.tags ? JSON.parse(markdown.tags) : [],
           isPublic: markdown.isPublic,
           binId: markdown.binId,
-          password: markdown.password || undefined,
+          password: markdown.password,
           createdAt: markdown.createdAt.toISOString(),
           updatedAt: markdown.updatedAt.toISOString()
         }
@@ -412,9 +355,9 @@ export class MarkdownStorageService {
         where: {
           userId,
           OR: [
-            { title: { contains: searchTerm } },
-            { content: { contains: searchTerm } },
-            { tags: { contains: searchTerm } }
+            { title: { contains: searchTerm, mode: 'insensitive' } },
+            { content: { contains: searchTerm, mode: 'insensitive' } },
+            { tags: { contains: searchTerm, mode: 'insensitive' } }
           ]
         },
         orderBy: { updatedAt: 'desc' }
@@ -428,7 +371,7 @@ export class MarkdownStorageService {
         tags: doc.tags ? JSON.parse(doc.tags) : [],
         isPublic: doc.isPublic,
         binId: doc.binId,
-        password: doc.password || undefined,
+        password: doc.password,
         createdAt: doc.createdAt.toISOString(),
         updatedAt: doc.updatedAt.toISOString()
       }))

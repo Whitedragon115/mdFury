@@ -9,7 +9,7 @@ import { PageLayout } from '@/components/PageLayout'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { MarkdownStorageService, SavedMarkdown } from '@/lib/markdown-storage'
+import { ClientMarkdownService, SavedMarkdown } from '@/lib/client-markdown'
 import { 
   FolderOpen, 
   Search, 
@@ -40,7 +40,7 @@ export default function DocumentsPage() {
     
     setIsLoading(true)
     try {
-      const userDocs = await MarkdownStorageService.getUserMarkdowns(user.id)
+      const userDocs = await ClientMarkdownService.getUserMarkdowns()
       setDocuments(userDocs)
     } catch (error) {
       toast.error('Failed to load documents')
@@ -54,7 +54,7 @@ export default function DocumentsPage() {
       const loadUserDocuments = async () => {
         setIsLoading(true)
         try {
-          const userDocs = await MarkdownStorageService.getUserMarkdowns(user.id)
+          const userDocs = await ClientMarkdownService.getUserMarkdowns()
           setDocuments(userDocs)
         } catch (error) {
           toast.error('Failed to load documents')
@@ -77,7 +77,14 @@ export default function DocumentsPage() {
 
     setIsLoading(true)
     try {
-      const results = await MarkdownStorageService.searchMarkdowns(user.id, searchQuery)
+      // For now, get all documents and filter client-side
+      // TODO: Add search API endpoint
+      const allDocs = await ClientMarkdownService.getUserMarkdowns()
+      const results = allDocs.filter(doc => 
+        doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        doc.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        doc.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      )
       setDocuments(results)
     } catch (error) {
       toast.error('Search failed')
@@ -86,15 +93,16 @@ export default function DocumentsPage() {
     }
   }
 
-  const handleEdit = (docId: string) => {
-    router.push(`/?doc=${docId}`)
+  const handleEdit = (doc: SavedMarkdown) => {
+    const binId = doc.binId || doc.id
+    router.push(`/${binId}/edit`)
   }
 
   const handleDelete = async (docId: string) => {
     if (!user) return
 
     try {
-      const result = await MarkdownStorageService.deleteMarkdown(docId, user.id)
+      const result = await ClientMarkdownService.deleteMarkdown(docId)
       if (result.success) {
         toast.success('Document deleted successfully')
         loadDocuments()
@@ -112,7 +120,7 @@ export default function DocumentsPage() {
     if (!user) return
 
     try {
-      const result = await MarkdownStorageService.saveMarkdown(user.id, {
+      const result = await ClientMarkdownService.saveMarkdown({
         title: `${doc.title} (Copy)`,
         content: doc.content,
         tags: doc.tags,
@@ -218,8 +226,7 @@ export default function DocumentsPage() {
               key={doc.id} 
               className="p-6 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border-slate-200 dark:border-slate-700 card-hover transition-all"
               style={{ 
-                animationDelay: `${index * 100}ms`,
-                animation: 'fade-in-up 0.4s ease-out forwards'
+                animation: `fade-in-up 0.4s ease-out forwards ${index * 100}ms`
               }}
             >
               <div className="flex items-start justify-between">
@@ -257,8 +264,10 @@ export default function DocumentsPage() {
                         {doc.tags.map((tag, tagIndex) => (
                           <span
                             key={tag}
-                            className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded text-xs animate-scale-in hover-scale transition-transform cursor-pointer"
-                            style={{ animationDelay: `${(index * 100) + (tagIndex * 50)}ms` }}
+                            className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded text-xs hover-scale transition-transform cursor-pointer"
+                            style={{ 
+                              animation: `scale-in 0.2s ease-out ${(index * 100) + (tagIndex * 50)}ms`
+                            }}
                           >
                             {tag}
                           </span>
@@ -276,7 +285,7 @@ export default function DocumentsPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleEdit(doc.id)}
+                    onClick={() => handleEdit(doc)}
                     title={t('documents.actions.edit')}
                     className="btn-animate hover-scale hover:bg-blue-50 dark:hover:bg-blue-900/20"
                   >

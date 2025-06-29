@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { User, AuthService, LoginCredentials, AuthResponse } from '@/lib/auth'
+import { User, LoginCredentials, AuthResponse, ClientAuthService } from '@/lib/client-auth'
 
 interface AuthContextType {
   user: User | null
@@ -20,22 +20,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // 檢查本地存儲中的 token
-    const token = localStorage.getItem('auth-token')
-    if (token) {
-      const user = AuthService.getUserByToken(token)
-      if (user) {
-        setUser(user)
-      } else {
-        localStorage.removeItem('auth-token')
+    const checkAuth = async () => {
+      const token = localStorage.getItem('auth-token')
+      if (token) {
+        try {
+          const result = await ClientAuthService.verifyToken(token)
+          if (result.success && result.user) {
+            setUser(result.user)
+          } else {
+            localStorage.removeItem('auth-token')
+          }
+        } catch (error) {
+          console.error('Failed to verify token:', error)
+          localStorage.removeItem('auth-token')
+        }
       }
+      setIsLoading(false)
     }
-    setIsLoading(false)
+    
+    checkAuth()
   }, [])
 
   const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
     setIsLoading(true)
     try {
-      const response = await AuthService.login(credentials)
+      const response = await ClientAuthService.login(credentials)
       
       if (response.success && response.user && response.token) {
         setUser(response.user)
