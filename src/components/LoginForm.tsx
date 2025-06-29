@@ -35,6 +35,8 @@ export default function LoginForm() {
         toast.error(response.message || t('auth.loginError'))
       } else {
         toast.success(`Welcome back, ${credentials.username}!`)
+        // Redirect to main editor page after successful login
+        window.location.href = '/'
       }
     } catch (error) {
       toast.error(t('auth.loginError'))
@@ -46,9 +48,17 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
-      {/* Language Switcher */}
-      <div className="absolute top-4 right-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      {/* Language Switcher and Back Button */}
+      <div className="absolute top-4 right-4 flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => window.location.href = '/'}
+          className="h-10 text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 border-slate-300 dark:border-slate-600"
+        >
+          {t('common.back')}
+        </Button>
         <LanguageSwitcher />
       </div>
       
@@ -113,7 +123,7 @@ export default function LoginForm() {
 
             <Button 
               type="submit" 
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              className="w-full h-10 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -138,7 +148,7 @@ export default function LoginForm() {
             <Button
               variant="outline"
               size="sm"
-              className="w-full justify-start text-sm bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-600 hover:text-slate-100"
+              className="w-full h-10 justify-start text-sm bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-600 hover:text-slate-100"
               onClick={() => handleDemoLogin('admin', 'admin123')}
             >
               <span className="font-medium">{t('auth.adminDemo')}:</span>
@@ -147,7 +157,7 @@ export default function LoginForm() {
             <Button
               variant="outline"
               size="sm"
-              className="w-full justify-start text-sm bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-600 hover:text-slate-100"
+              className="w-full h-10 justify-start text-sm bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-600 hover:text-slate-100"
               onClick={() => handleDemoLogin('demo', 'demo123')}
             >
               <span className="font-medium">{t('auth.userDemo')}:</span>

@@ -9,6 +9,7 @@ interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<AuthResponse>
   logout: () => void
   isAuthenticated: boolean
+  updateUser: (user: User) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -52,12 +53,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem('auth-token')
   }
 
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser)
+  }
+
   const value = {
     user,
     isLoading,
     login,
     logout,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    updateUser
   }
 
   return (

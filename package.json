@@ -1,6 +1,7 @@
 {
-  "name": "md-preview",
-  "version": "0.1.0",
+  "name": "mdbin",
+  "version": "1.0.0",
+  "description": "Modern markdown editor with live preview and document management",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",

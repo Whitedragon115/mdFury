@@ -1,7 +1,7 @@
 {
   "auth": {
     "title": "Login to Continue",
-    "subtitle": "Enter your credentials to access the Markdown Previewer",
+    "subtitle": "Enter your credentials to access mdBin",
     "username": "Username",
     "usernamePlaceholder": "Enter your username",
     "password": "Password",
@@ -12,8 +12,16 @@
     "adminDemo": "Admin Demo",
     "userDemo": "User Demo"
   },
+  "navigation": {
+    "editor": "Editor",
+    "myDocs": "My Documents",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
   "editor": {
-    "title": "Markdown Previewer",
+    "title": "mdBin",
+    "guestMode": "Guest Mode",
+    "guestModeDesc": "Login to save your documents",
     "viewModes": {
       "split": "Split",
       "edit": "Edit",
@@ -22,23 +30,105 @@
     "actions": {
       "copy": "Copy",
       "download": "Download",
-      "reset": "Reset",
-      "logout": "Logout"
+      "save": "Save",
+      "logout": "Logout",
+      "login": "Login"
     },
     "placeholders": {
       "markdown": "Enter your markdown here...",
-      "filename": "Enter filename..."
+      "filename": "Enter filename...",
+      "title": "Document title...",
+      "tags": "Add tags (comma separated)..."
+    },
+    "labels": {
+      "editor": "Editor",
+      "preview": "Preview"
     },
     "notifications": {
       "copied": "Markdown copied to clipboard!",
       "downloaded": "Markdown file downloaded!",
-      "reset": "Content has been reset!",
-      "loggedOut": "Successfully logged out!"
+      "saved": "Document saved successfully!",
+      "updated": "Document updated successfully!",
+      "loggedOut": "Successfully logged out!",
+      "loginRequired": "Please login to save documents"
+    },
+    "saveDialog": {
+      "title": "Save Document",
+      "documentTitle": "Title",
+      "tags": "Tags",
+      "isPublic": "Make public",
+      "isPublicDesc": "Allow others to view this document",
+      "cancel": "Cancel",
+      "save": "Save"
+    }
+  },
+  "documents": {
+    "title": "My Documents",
+    "empty": "No documents yet",
+    "emptyDesc": "Start creating your first markdown document!",
+    "search": "Search documents...",
+    "createNew": "Create New",
+    "lastModified": "Last modified",
+    "tags": "Tags",
+    "public": "Public",
+    "private": "Private",
+    "actions": {
+      "edit": "Edit",
+      "delete": "Delete",
+      "duplicate": "Duplicate"
+    },
+    "deleteDialog": {
+      "title": "Delete Document",
+      "message": "Are you sure you want to delete this document? This action cannot be undone.",
+      "cancel": "Cancel",
+      "delete": "Delete"
+    }
+  },
+  "settings": {
+    "title": "Account Settings",
+    "profile": "Profile",
+    "preferences": "Preferences",
+    "displayName": "Display Name",
+    "displayNamePlaceholder": "Enter your display name",
+    "email": "Email",
+    "profileImage": "Profile Image",
+    "profileImagePlaceholder": "Enter image URL",
+    "language": "Language",
+    "theme": "Theme",
+    "themes": {
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "save": "Save Changes",
+    "cancel": "Cancel",
+    "notifications": {
+      "saved": "Settings saved successfully!",
+      "error": "Failed to save settings"
     }
   },
   "common": {
     "language": "Language",
     "darkMode": "Dark Mode",
-    "lightMode": "Light Mode"
+    "lightMode": "Light Mode",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Info",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "create": "Create",
+    "welcome": "Welcome to mdBin",
+    "appDescription": "Modern markdown editor with live preview",
+    "characters": "characters",
+    "preview": "Preview"
   }
 }
