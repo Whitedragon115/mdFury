@@ -1,23 +1,23 @@
 > ok so because someone is too lazy to write ReadMe.md with his shitty english skill by him self, so he just leave it to AI
 
-# 📝 mdBin - Modern Markdown Editor & Previewer
+# 📝 mdFury - Modern Markdown Editor & Previewer
 
 ## Project Still Under Developement!
 
 <div align="center">
 
-![mdBin Logo](https://img.shields.io/badge/mdBin-Modern%20Markdown%20Editor-blue?style=for-the-badge&logo=markdown&logoColor=white)
+![mdFury Logo](https://img.shields.io/badge/mdFury-Modern%20Markdown%20Editor-blue?style=for-the-badge&logo=markdown&logoColor=white)
 
 A powerful, beautiful markdown editor with real-time preview, built with Next.js 15, TypeScript, and modern web technologies ✨
 
-[![GitHub](https://img.shields.io/github/license/Whitedragon115/mdBin?style=flat-square)](https://github.com/Whitedragon115/mdBin)
-[![GitHub stars](https://img.shields.io/github/stars/Whitedragon115/mdBin?style=flat-square)](https://github.com/Whitedragon115/mdBin/stargazers)
-[![GitHub issues](https://img.shields.io/github/issues/Whitedragon115/mdBin?style=flat-square)](https://github.com/Whitedragon115/mdBin/issues)
+[![GitHub](https://img.shields.io/github/license/Whitedragon115/mdFury?style=flat-square)](https://github.com/Whitedragon115/mdFury)
+[![GitHub stars](https://img.shields.io/github/stars/Whitedragon115/mdFury?style=flat-square)](https://github.com/Whitedragon115/mdFury/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/Whitedragon115/mdFury?style=flat-square)](https://github.com/Whitedragon115/mdFury/issues)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5+-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38bdf8?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
 
-[🚀 Live Demo](https://mdbin.vercel.app) • [📖 Documentation](#-features) • [⚡ Quick Start](#-quick-start) • [🤝 Contributing](#-contributing)
+[🚀 Live Demo](https://mdFury.vercel.app) • [📖 Documentation](#-features) • [⚡ Quick Start](#-quick-start) • [🤝 Contributing](#-contributing)
 
 </div>
 
@@ -25,7 +25,7 @@ A powerful, beautiful markdown editor with real-time preview, built with Next.js
 
 ## 🎯 Overview
 
-mdBin is a state-of-the-art markdown editor that combines the power of modern web technologies with an intuitive, beautiful interface. Whether you're a developer documenting code, a writer crafting content, or a student taking notes, mdBin provides the perfect environment for markdown editing with real-time preview capabilities.
+mdFury is a state-of-the-art markdown editor that combines the power of modern web technologies with an intuitive, beautiful interface. Whether you're a developer documenting code, a writer crafting content, or a student taking notes, mdFury provides the perfect environment for markdown editing with real-time preview capabilities.
 
 ## 🌟 Features
 
@@ -79,8 +79,8 @@ mdBin is a state-of-the-art markdown editor that combines the power of modern we
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/Whitedragon115/mdBin.git
-   cd mdBin
+   git clone https://github.com/Whitedragon115/mdFury.git
+   cd mdFury
    ```
 
 2. **Install dependencies**
@@ -109,7 +109,7 @@ mdBin is a state-of-the-art markdown editor that combines the power of modern we
 
 4. **Open your browser**
 
-   Navigate to [http://localhost:3000](http://localhost:3000) to see mdBin in action!
+   Navigate to [http://localhost:3000](http://localhost:3000) to see mdFury in action!
 
 ### Environment Setup (Optional)
 
@@ -158,7 +158,7 @@ DATABASE_URL=your-database-url
 
 ### Basic Usage
 
-1. **Create a New Document**: Click on the mdBin logo to start with a fresh document
+1. **Create a New Document**: Click on the mdFury logo to start with a fresh document
 2. **Write Markdown**: Use the left panel to write your markdown content
 3. **Live Preview**: See real-time preview in the right panel
 4. **Toolbar Actions**: Use toolbar buttons for copy, download, and save operations
@@ -212,7 +212,7 @@ DATABASE_URL=your-database-url
 ## 🏗️ Project Structure
 
 ```
-mdBin/
+mdFury/
 ├── public/                 # Static assets
 ├── src/
 │   ├── app/               # Next.js App Router pages
@@ -261,7 +261,7 @@ npx tsc --noEmit
 
 ## 🤝 Contributing
 
-We welcome contributions from the community! Here's how you can help make mdBin even better:
+We welcome contributions from the community! Here's how you can help make mdFury even better:
 
 ### Getting Started
 
@@ -305,7 +305,7 @@ The MIT License allows you to:
 
 We extend our gratitude to the amazing open-source community and the following projects:
 
-- **[Next.js](https://nextjs.org/)** - The React framework that powers mdBin
+- **[Next.js](https://nextjs.org/)** - The React framework that powers mdFury
 - **[Tailwind CSS](https://tailwindcss.com/)** - For the beautiful utility-first CSS framework
 - **[shadcn/ui](https://ui.shadcn.com/)** - For the elegant and accessible UI components
 - **[react-markdown](https://github.com/remarkjs/react-markdown)** - For powerful markdown rendering
@@ -315,9 +315,9 @@ We extend our gratitude to the amazing open-source community and the following p
 ## 📞 Support & Community
 
 ### Get Help
-- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/Whitedragon115/mdBin/issues)
-- 💡 **Feature Requests**: [GitHub Issues](https://github.com/Whitedragon115/mdBin/issues)
-- 📚 **Documentation**: Check our [Wiki](https://github.com/Whitedragon115/mdBin/wiki)
+- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/Whitedragon115/mdFury/issues)
+- 💡 **Feature Requests**: [GitHub Issues](https://github.com/Whitedragon115/mdFury/issues)
+- 📚 **Documentation**: Check our [Wiki](https://github.com/Whitedragon115/mdFury/wiki)
 
 ### Connect with Us
 - 💬 **Discord**: `darkingfury` (Direct messages open)
@@ -327,7 +327,7 @@ We extend our gratitude to the amazing open-source community and the following p
 ### Join the Community
 - ⭐ **Star the repository** if you find it helpful
 - 🍴 **Fork the project** to contribute
-- 📢 **Share mdBin** with your friends and colleagues
+- 📢 **Share mdFury** with your friends and colleagues
 - 💝 **Sponsor development** to help us grow
 
 ## 📊 Project Metrics
@@ -345,8 +345,8 @@ We extend our gratitude to the amazing open-source community and the following p
 
 **Made with ❤️ by [Whitedragon115](https://github.com/Whitedragon115)**
 
-*If you find mdBin helpful, please consider giving it a ⭐ on GitHub!*
+*If you find mdFury helpful, please consider giving it a ⭐ on GitHub!*
 
-**[⬆ Back to Top](#-mdbin---modern-markdown-editor--previewer)**
+**[⬆ Back to Top](#-mdFury---modern-markdown-editor--previewer)**
 
 </div>

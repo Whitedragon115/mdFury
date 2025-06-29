@@ -27,7 +27,7 @@ import {
   Save
 } from 'lucide-react'
 
-const initialMarkdown = `# 🎉 Welcome to mdBin
+const initialMarkdown = `# 🎉 Welcome to mdFury
 
 ## Features
 

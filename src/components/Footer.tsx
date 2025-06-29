@@ -48,7 +48,7 @@ export function Footer() {
               className="text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
             >
               <a
-                href="https://github.com/Whitedragon115/mdBin"
+                href="https://github.com/Whitedragon115/mdFury"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2"

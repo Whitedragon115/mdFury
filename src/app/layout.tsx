@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "mdBin - Modern Markdown Editor",
+  title: "mdFury - Modern Markdown Editor",
   description: "A modern markdown editor with live preview and document management",
 };
 

@@ -1,7 +1,7 @@
 {
   "auth": {
     "title": "登入以繼續",
-    "subtitle": "輸入您的憑證以訪問 mdBin",
+    "subtitle": "輸入您的憑證以訪問 mdFury",
     "username": "用戶名",
     "usernamePlaceholder": "輸入您的用戶名",
     "password": "密碼",
@@ -19,7 +19,7 @@
     "logout": "登出"
   },
   "editor": {
-    "title": "mdBin",
+    "title": "mdFury",
     "guestMode": "訪客模式",
     "guestModeDesc": "登入以保存您的文檔",
     "viewModes": {
@@ -126,7 +126,7 @@
     "edit": "編輯",
     "view": "查看",
     "create": "創建",
-    "welcome": "歡迎使用 mdBin",
+    "welcome": "歡迎使用 mdFury",
     "appDescription": "現代化的實時預覽 Markdown 編輯器",
     "characters": "字符",
     "preview": "預覽"

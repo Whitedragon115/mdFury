@@ -1,7 +1,7 @@
 {
   "auth": {
     "title": "Login to Continue",
-    "subtitle": "Enter your credentials to access mdBin",
+    "subtitle": "Enter your credentials to access mdFury",
     "username": "Username",
     "usernamePlaceholder": "Enter your username",
     "password": "Password",
@@ -19,7 +19,7 @@
     "logout": "Logout"
   },
   "editor": {
-    "title": "mdBin",
+    "title": "mdFury",
     "guestMode": "Guest Mode",
     "guestModeDesc": "Login to save your documents",
     "viewModes": {
@@ -126,7 +126,7 @@
     "edit": "Edit",
     "view": "View",
     "create": "Create",
-    "welcome": "Welcome to mdBin",
+    "welcome": "Welcome to mdFury",
     "appDescription": "Modern markdown editor with live preview",
     "characters": "characters",
     "preview": "Preview"
