@@ -1,0 +1,338 @@
+'use client'
+
+import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { MarkdownStorageService } from '@/lib/markdown-storage'
+import { AuthProvider } from '@/contexts/AuthContext'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeHighlight from 'rehype-highlight'
+import rehypeRaw from 'rehype-raw'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { 
+  FileText, 
+  ArrowLeft, 
+  Lock, 
+  Unlock, 
+  Eye,
+  EyeOff,
+  Share2,
+  Copy,
+  Download
+} from 'lucide-react'
+import toast from 'react-hot-toast'
+
+interface BinDocument {
+  id: string
+  title: string
+  content: string
+  tags: string[]
+  isPublic: boolean
+  hasPassword: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export default function BinPreviewPage() {
+  const { binId } = useParams()
+  const router = useRouter()
+  const { t } = useTranslation()
+  const [binDocument, setBinDocument] = useState<BinDocument | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [passwordRequired, setPasswordRequired] = useState(false)
+  const [password, setPassword] = useState('')
+  const [passwordAttempting, setPasswordAttempting] = useState(false)
+
+  useEffect(() => {
+    if (binId && typeof binId === 'string') {
+      loadDocument(binId)
+    }
+  }, [binId])
+
+  const loadDocument = async (id: string, inputPassword?: string) => {
+    setLoading(true)
+    setError(null)
+    
+    try {
+      // Try to get the document (this would be a public API call in a real app)
+      const result = await MarkdownStorageService.getPublicMarkdown(id, inputPassword)
+      
+      if (result.success && result.markdown) {
+        setBinDocument({
+          id: result.markdown.id,
+          title: result.markdown.title,
+          content: result.markdown.content,
+          tags: result.markdown.tags || [],
+          isPublic: result.markdown.isPublic || false,
+          hasPassword: !!result.markdown.password,
+          createdAt: result.markdown.createdAt,
+          updatedAt: result.markdown.updatedAt
+        })
+        setPasswordRequired(false)
+      } else if (result.passwordRequired) {
+        setPasswordRequired(true)
+      } else {
+        setError(result.message || 'Document not found')
+      }
+    } catch (err) {
+      setError('Failed to load document')
+    } finally {
+      setLoading(false)
+      setPasswordAttempting(false)
+    }
+  }
+
+  const handlePasswordSubmit = async () => {
+    if (!password.trim() || !binId || typeof binId !== 'string') return
+    
+    setPasswordAttempting(true)
+    await loadDocument(binId, password)
+  }
+
+  const copyToClipboard = async () => {
+    if (!binDocument) return
+    
+    try {
+      await navigator.clipboard.writeText(binDocument.content)
+      toast.success('Content copied to clipboard!')
+    } catch (err) {
+      toast.error('Failed to copy to clipboard')
+    }
+  }
+
+  const downloadMarkdown = () => {
+    if (!binDocument) return
+    
+    const blob = new Blob([binDocument.content], { type: 'text/markdown' })
+    const url = URL.createObjectURL(blob)
+    const element = document.createElement('a')
+    element.href = url
+    element.download = `${binDocument.title}.md`
+    document.body.appendChild(element)
+    element.click()
+    document.body.removeChild(element)
+    URL.revokeObjectURL(url)
+    toast.success('Document downloaded!')
+  }
+
+  const shareDocument = async () => {
+    const url = window.location.href
+    
+    try {
+      await navigator.clipboard.writeText(url)
+      toast.success('Share link copied to clipboard!')
+    } catch (err) {
+      toast.error('Failed to copy share link')
+    }
+  }
+
+  if (loading) {
+    return (
+      <AuthProvider>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-slate-600 dark:text-slate-400">Loading document...</p>
+          </div>
+        </div>
+      </AuthProvider>
+    )
+  }
+
+  if (error) {
+    return (
+      <AuthProvider>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
+          <div className="text-center max-w-md">
+            <FileText className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-2">
+              Document Not Found
+            </h1>
+            <p className="text-slate-600 dark:text-slate-400 mb-6">
+              {error}
+            </p>
+            <Button onClick={() => router.push('/')} className="bg-blue-600 hover:bg-blue-700">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Go to Editor
+            </Button>
+          </div>
+        </div>
+      </AuthProvider>
+    )
+  }
+
+  if (passwordRequired) {
+    return (
+      <AuthProvider>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
+          <Card className="w-full max-w-md p-6">
+            <div className="text-center mb-6">
+              <Lock className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+              <h1 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">
+                Password Required
+              </h1>
+              <p className="text-slate-600 dark:text-slate-400">
+                This document is password protected. Please enter the password to view.
+              </p>
+            </div>
+            
+            <div className="space-y-4">
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password..."
+                onKeyPress={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+                disabled={passwordAttempting}
+              />
+              
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline" 
+                  onClick={() => router.push('/')}
+                  className="flex-1"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back
+                </Button>
+                <Button 
+                  onClick={handlePasswordSubmit}
+                  disabled={!password.trim() || passwordAttempting}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  {passwordAttempting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Checking...
+                    </>
+                  ) : (
+                    <>
+                      <Unlock className="w-4 h-4 mr-2" />
+                      Access
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </AuthProvider>
+    )
+  }
+
+  return (
+    <AuthProvider>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        {/* Header */}
+        <header className="border-b border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-10">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" onClick={() => router.push('/')}>
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Editor
+                </Button>
+                
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+                    <Eye className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-xl font-bold text-slate-800 dark:text-slate-200">
+                      {binDocument?.title || 'Untitled Document'}
+                    </h1>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      Bin ID: {binId}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <Button variant="outline" size="sm" onClick={shareDocument}>
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share
+                </Button>
+                <Button variant="outline" size="sm" onClick={copyToClipboard}>
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy
+                </Button>
+                <Button variant="outline" size="sm" onClick={downloadMarkdown}>
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Content */}
+        <main className="container mx-auto p-6">
+          {binDocument && (
+            <>
+              {/* Document Meta */}
+              <div className="mb-6">
+                {binDocument.tags.length > 0 && (
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-sm text-slate-500 dark:text-slate-400">Tags:</span>
+                    {binDocument.tags.map((tag: string, index: number) => (
+                      <span
+                        key={index}
+                        className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-full"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                
+                <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
+                  <span className="flex items-center gap-1">
+                    {binDocument.isPublic ? (
+                      <>
+                        <Eye className="w-3 h-3" />
+                        Public
+                      </>
+                    ) : (
+                      <>
+                        <EyeOff className="w-3 h-3" />
+                        Private
+                      </>
+                    )}
+                  </span>
+                  
+                  {binDocument.hasPassword && (
+                    <span className="flex items-center gap-1">
+                      <Lock className="w-3 h-3" />
+                      Password Protected
+                    </span>
+                  )}
+                  
+                  <span>
+                    Updated: {new Date(binDocument.updatedAt).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Preview Content */}
+              <Card className="p-8 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-xl">
+                <div className="markdown-content">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[rehypeHighlight, rehypeRaw]}
+                  >
+                    {binDocument.content}
+                  </ReactMarkdown>
+                </div>
+              </Card>
+            </>
+          )}
+        </main>
+      </div>
+    </AuthProvider>
+  )
+}

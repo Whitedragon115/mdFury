@@ -12,8 +12,8 @@ import { Card } from '@/components/ui/card'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { AccountDropdown } from '@/components/AccountDropdown'
-import { SaveDialog } from '@/components/SaveDialog'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
+import BinControls from '@/components/BinControls'
 import { MarkdownStorageService } from '@/lib/markdown-storage'
 import { useAuth } from '@/contexts/AuthContext'
 import { 
@@ -24,7 +24,8 @@ import {
   Split,
   Maximize2,
   LogIn,
-  Save
+  Save,
+  Share2
 } from 'lucide-react'
 
 const initialMarkdown = `# 🎉 Welcome to mdFury
@@ -82,14 +83,29 @@ export default function MarkdownPreviewer() {
   const [markdown, setMarkdown] = useState(initialMarkdown)
   const [currentDocId, setCurrentDocId] = useState<string>()
   const [currentDocTitle, setCurrentDocTitle] = useState('')
+  const [currentBinId, setCurrentBinId] = useState('')
+  const [currentTags, setCurrentTags] = useState<string[]>([])
+  const [isPublic, setIsPublic] = useState(false)
+  const [binPassword, setBinPassword] = useState('')
   const [viewMode, setViewMode] = useState<'split' | 'edit' | 'preview'>('split')
   const [isClient, setIsClient] = useState(false)
-  const [saveDialogOpen, setSaveDialogOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const isAuthenticated = !!user
 
+  // Generate random bin ID
+  const generateBinId = () => {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    let result = ''
+    for (let i = 0; i < 6; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    setCurrentBinId(result)
+  }
+
   useEffect(() => {
     setIsClient(true)
+    // Generate initial bin ID
+    generateBinId()
   }, [])
 
   // Load document if documentId is provided
@@ -101,6 +117,11 @@ export default function MarkdownPreviewer() {
       setMarkdown(initialMarkdown)
       setCurrentDocId(undefined)
       setCurrentDocTitle('')
+      setCurrentBinId('')
+      setCurrentTags([])
+      setIsPublic(false)
+      setBinPassword('')
+      generateBinId()
     }
   }, [documentId, user])
 
@@ -113,6 +134,10 @@ export default function MarkdownPreviewer() {
         setMarkdown(doc.content)
         setCurrentDocId(doc.id)
         setCurrentDocTitle(doc.title)
+        setCurrentBinId(doc.id) // Use document ID as bin ID
+        setCurrentTags(doc.tags || [])
+        setIsPublic(doc.isPublic || false)
+        setBinPassword('') // Don't load password for security
       } else {
         toast.error('Document not found')
         // Could redirect or show error
@@ -145,44 +170,85 @@ export default function MarkdownPreviewer() {
     toast.success(t('editor.notifications.downloaded'))
   }
 
-  const handleSave = async (data: { title: string; tags: string[]; isPublic: boolean }) => {
+  const shareDocument = async () => {
+    if (!currentDocId) {
+      toast.error('Please save the document first to get a share link')
+      return
+    }
+
+    const previewUrl = `${window.location.origin}/${currentDocId}`
+    
+    try {
+      await navigator.clipboard.writeText(previewUrl)
+      toast.success('Preview link copied to clipboard!')
+    } catch (err) {
+      toast.error('Failed to copy share link')
+    }
+  }
+
+  const handleSave = async () => {
     if (!user) {
       toast.error(t('editor.notifications.loginRequired'))
       return
     }
 
+    if (!currentDocTitle.trim()) {
+      toast.error('Please enter a title for your document')
+      return
+    }
+
     setIsSaving(true)
     try {
+      const saveData = {
+        title: currentDocTitle,
+        content: markdown,
+        tags: currentTags,
+        isPublic: isPublic,
+        binId: currentBinId || undefined,
+        password: binPassword || undefined
+      }
+
       if (currentDocId) {
         // Update existing document
-        const result = await MarkdownStorageService.updateMarkdown(currentDocId, user.id, {
-          title: data.title,
-          content: markdown,
-          tags: data.tags,
-          isPublic: data.isPublic
-        })
+        const result = await MarkdownStorageService.updateMarkdown(currentDocId, user.id, saveData)
         
         if (result.success) {
-          setCurrentDocTitle(data.title)
-          toast.success(t('editor.notifications.updated'))
+          const previewUrl = `${window.location.origin}/${currentBinId}`
+          toast.success(
+            <div>
+              <p>{t('editor.notifications.updated')}</p>
+              <button
+                onClick={() => navigator.clipboard.writeText(previewUrl)}
+                className="text-xs underline text-blue-600 hover:text-blue-800"
+              >
+                Copy preview link: /{currentBinId}
+              </button>
+            </div>
+          )
         } else {
           toast.error(result.message || 'Failed to update document')
         }
       } else {
         // Create new document
-        const result = await MarkdownStorageService.saveMarkdown(user.id, {
-          title: data.title,
-          content: markdown,
-          tags: data.tags,
-          isPublic: data.isPublic
-        })
+        const result = await MarkdownStorageService.saveMarkdown(user.id, saveData)
         
         if (result.success && result.markdown) {
           setCurrentDocId(result.markdown.id)
-          setCurrentDocTitle(result.markdown.title)
-          // Update URL without navigation
+          setCurrentBinId(result.markdown.id)
+          // Update URL without navigation and show preview link
           window.history.replaceState(null, '', `/?doc=${result.markdown.id}`)
-          toast.success(t('editor.notifications.saved'))
+          const previewUrl = `${window.location.origin}/${result.markdown.id}`
+          toast.success(
+            <div>
+              <p>{t('editor.notifications.saved')}</p>
+              <button
+                onClick={() => navigator.clipboard.writeText(previewUrl)}
+                className="text-xs underline text-blue-600 hover:text-blue-800"
+              >
+                Copy preview link: /{result.markdown.id}
+              </button>
+            </div>
+          )
         } else {
           toast.error('Failed to save document')
         }
@@ -191,7 +257,6 @@ export default function MarkdownPreviewer() {
       toast.error('Failed to save document')
     } finally {
       setIsSaving(false)
-      setSaveDialogOpen(false)
     }
   }
 
@@ -200,6 +265,10 @@ export default function MarkdownPreviewer() {
     setMarkdown(initialMarkdown)
     setCurrentDocId(undefined)
     setCurrentDocTitle('')
+    setCurrentTags([])
+    setIsPublic(false)
+    setBinPassword('')
+    generateBinId()
     window.history.replaceState(null, '', '/')
   }
 
@@ -291,7 +360,7 @@ export default function MarkdownPreviewer() {
           </div>
 
           {/* Right: Action Buttons */}
-          <div className="flex items-center gap-3 overflow-x-auto">
+          <div className="flex items-center gap-3 overflow-x-auto custom-scrollbar">
             <Button 
               variant="outline" 
               size="sm" 
@@ -314,21 +383,43 @@ export default function MarkdownPreviewer() {
               <span className="hidden sm:inline">{t('editor.actions.download')}</span>
               <span className="sm:hidden">Download</span>
             </Button>
-            {isAuthenticated && (
+            {currentDocId && (
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => setSaveDialogOpen(true)} 
-                title={t('editor.actions.save')}
-                className="h-9 whitespace-nowrap bg-green-50/90 hover:bg-green-100/90 dark:bg-green-900/40 dark:hover:bg-green-900/60 text-green-700 dark:text-green-400 border-green-200 dark:border-green-700 shadow-lg transition-colors duration-200 backdrop-blur-sm focus:outline-none focus:ring-1 focus:ring-green-500 focus:ring-inset"
+                onClick={shareDocument} 
+                title="Share document"
+                className="h-9 whitespace-nowrap bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-inset"
               >
-                <Save className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">{t('editor.actions.save')}</span>
-                <span className="sm:hidden">Save</span>
+                <Share2 className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Share</span>
+                <span className="sm:hidden">Share</span>
               </Button>
             )}
           </div>
         </div>
+
+        {/* Bin Controls - Only show for authenticated users */}
+        {isAuthenticated && (
+          <div className="mt-4 mb-6">
+            <BinControls
+              title={currentDocTitle}
+              binId={currentBinId}
+              tags={currentTags}
+              isPublic={isPublic}
+              hasPassword={!!binPassword}
+              password={binPassword}
+              isLoading={isSaving}
+              onTitleChange={setCurrentDocTitle}
+              onBinIdChange={setCurrentBinId}
+              onTagsChange={setCurrentTags}
+              onPublicChange={setIsPublic}
+              onPasswordChange={setBinPassword}
+              onSave={handleSave}
+              onGenerateId={generateBinId}
+            />
+          </div>
+        )}
 
         <div className="grid gap-6 min-h-[calc(100vh-280px)]">
           {viewMode === 'split' && (
@@ -362,7 +453,7 @@ export default function MarkdownPreviewer() {
                   <Maximize2 className="w-4 h-4" />
                 </Button>
                 </div>
-                <div className="h-full min-h-[300px] md:min-h-[500px] overflow-auto">
+                <div className="h-full min-h-[300px] md:min-h-[500px] overflow-auto custom-scrollbar">
                   <div className="markdown-content animate-fade-in">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
@@ -407,7 +498,7 @@ export default function MarkdownPreviewer() {
                   <Split className="w-4 h-4" />
                 </Button>
               </div>
-              <div className="h-full min-h-[400px] md:min-h-[600px] overflow-auto">
+              <div className="h-full min-h-[400px] md:min-h-[600px] overflow-auto custom-scrollbar">
                 <div className="markdown-content animate-fade-in">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
@@ -421,15 +512,6 @@ export default function MarkdownPreviewer() {
           )}
         </div>
       </main>
-
-      {/* Save Dialog */}
-      <SaveDialog
-        isOpen={saveDialogOpen}
-        onClose={() => setSaveDialogOpen(false)}
-        onSave={handleSave}
-        initialTitle={currentDocTitle}
-        isLoading={isSaving}
-      />
     </div>
   )
 }

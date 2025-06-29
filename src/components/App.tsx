@@ -2,10 +2,11 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import MarkdownPreviewer from './MarkdownPreviewer'
+import BackgroundLayer from './BackgroundLayer'
 import { Loader2 } from 'lucide-react'
 
 export default function App() {
-  const { isLoading } = useAuth()
+  const { isLoading, user } = useAuth()
 
   if (isLoading) {
     return (
@@ -20,8 +21,17 @@ export default function App() {
 
   // Always show the editor - save functionality is restricted based on authentication
   return (
-    <div className="animate-fade-in">
-      <MarkdownPreviewer />
-    </div>
+    <>
+      {/* Background Layer */}
+      <BackgroundLayer
+        backgroundImage={user?.backgroundImage}
+        backgroundBlur={user?.backgroundBlur}
+        backgroundBrightness={user?.backgroundBrightness}
+      />
+      
+      <div className="animate-fade-in relative z-10">
+        <MarkdownPreviewer />
+      </div>
+    </>
   )
 }

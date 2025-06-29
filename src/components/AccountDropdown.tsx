@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
+import SettingsPanel from '@/components/SettingsPanel'
 import { 
   User, 
   ChevronDown, 
@@ -21,6 +22,8 @@ export function AccountDropdown() {
   const { user, logout } = useAuth()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const [currentTheme, setCurrentTheme] = useState(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -36,10 +39,31 @@ export function AccountDropdown() {
     return 'dark'
   })
 
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside)
+      }
+    }
+  }, [isOpen])
+
   if (!user) return null
 
   const handleNavigation = (path: string) => {
     router.push(path)
+    setIsOpen(false)
+  }
+
+  const handleSettings = () => {
+    setShowSettings(true)
     setIsOpen(false)
   }
 
@@ -71,7 +95,7 @@ export function AccountDropdown() {
   }
 
   return (
-    <div className="relative">
+    <div className="relative" ref={dropdownRef}>
       <Button
         variant="ghost"
         size="sm"
@@ -96,10 +120,7 @@ export function AccountDropdown() {
       </Button>
 
       {isOpen && (
-        <div 
-          className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-50 animate-fade-in"
-          onBlur={() => setTimeout(() => setIsOpen(false), 100)}
-        >
+        <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg z-50 animate-fade-in">
           <div className="p-2">
             {/* User Info */}
             <div className="px-3 py-2 border-b border-slate-200 dark:border-slate-700">
@@ -118,7 +139,7 @@ export function AccountDropdown() {
               </button>
 
               <button
-                onClick={() => handleNavigation('/settings')}
+                onClick={handleSettings}
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
               >
                 <Settings className="w-4 h-4" />
@@ -180,13 +201,11 @@ export function AccountDropdown() {
         </div>
       )}
 
-      {/* Backdrop */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 z-40"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+      {/* Settings Panel */}
+      <SettingsPanel 
+        isOpen={showSettings} 
+        onClose={() => setShowSettings(false)} 
+      />
     </div>
   )
 }

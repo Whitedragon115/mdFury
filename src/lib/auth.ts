@@ -9,6 +9,9 @@ export interface UserProfile {
   profileImage?: string
   language: string
   theme: 'light' | 'dark' | 'system'
+  backgroundImage?: string
+  backgroundBlur?: number
+  backgroundBrightness?: number
   createdAt: string
   lastLogin: string
 }
@@ -21,6 +24,9 @@ export interface User {
   profileImage?: string
   language: string
   theme: 'light' | 'dark' | 'system'
+  backgroundImage?: string
+  backgroundBlur?: number
+  backgroundBrightness?: number
 }
 
 // Mock user database for demo
@@ -33,11 +39,15 @@ interface UserData {
   profileImage: string
   language: string
   theme: 'light' | 'dark' | 'system'
+  backgroundImage?: string
+  backgroundBlur?: number
+  backgroundBrightness?: number
   createdAt: string
   lastLogin: string
 }
 
-const users: UserData[] = [
+// Default users
+const defaultUsers: UserData[] = [
   {
     id: '1',
     username: 'admin',
@@ -64,6 +74,44 @@ const users: UserData[] = [
   }
 ]
 
+// Load users from localStorage or use defaults
+const loadUsers = (): UserData[] => {
+  if (typeof window === 'undefined') return defaultUsers
+  
+  try {
+    const stored = localStorage.getItem('mdbin_users')
+    if (stored) {
+      const parsedUsers: UserData[] = JSON.parse(stored)
+      // Merge with defaults to ensure all users exist
+      const userMap = new Map(parsedUsers.map((u: UserData) => [u.id, u]))
+      defaultUsers.forEach(defaultUser => {
+        if (!userMap.has(defaultUser.id)) {
+          userMap.set(defaultUser.id, defaultUser)
+        }
+      })
+      return Array.from(userMap.values())
+    }
+  } catch (error) {
+    console.warn('Failed to load users from localStorage:', error)
+  }
+  
+  return defaultUsers
+}
+
+// Save users to localStorage
+const saveUsers = (users: UserData[]) => {
+  if (typeof window === 'undefined') return
+  
+  try {
+    localStorage.setItem('mdbin_users', JSON.stringify(users))
+  } catch (error) {
+    console.warn('Failed to save users to localStorage:', error)
+  }
+}
+
+// Initialize users
+let users: UserData[] = loadUsers()
+
 export interface LoginCredentials {
   username: string
   password: string
@@ -87,6 +135,9 @@ export class AuthService {
       profileImage: user.profileImage,
       language: user.language,
       theme: user.theme,
+      backgroundImage: user.backgroundImage,
+      backgroundBlur: user.backgroundBlur,
+      backgroundBrightness: user.backgroundBrightness,
       timestamp: Date.now()
     }))
   }
@@ -101,14 +152,26 @@ export class AuthService {
         return null
       }
       
+      // Reload users to get the latest data from localStorage
+      users = loadUsers()
+      
+      // Find the current user in the fresh data
+      const currentUser = users.find(u => u.id === decoded.id)
+      if (!currentUser) {
+        return null
+      }
+      
       return {
-        id: decoded.id,
-        username: decoded.username,
-        email: decoded.email,
-        displayName: decoded.displayName || decoded.username,
-        profileImage: decoded.profileImage || '',
-        language: decoded.language || 'en',
-        theme: decoded.theme || 'system'
+        id: currentUser.id,
+        username: currentUser.username,
+        email: currentUser.email,
+        displayName: currentUser.displayName,
+        profileImage: currentUser.profileImage || '',
+        language: currentUser.language,
+        theme: currentUser.theme,
+        backgroundImage: currentUser.backgroundImage || '',
+        backgroundBlur: currentUser.backgroundBlur ?? 0,
+        backgroundBrightness: currentUser.backgroundBrightness ?? 50
       }
     } catch (error) {
       return null
@@ -138,6 +201,13 @@ export class AuthService {
       }
     }
 
+    // Update last login time
+    const userIndex = users.findIndex(u => u.id === user.id)
+    if (userIndex !== -1) {
+      users[userIndex].lastLogin = new Date().toISOString()
+      saveUsers(users)
+    }
+
     const userWithoutPassword: User = {
       id: user.id,
       username: user.username,
@@ -145,7 +215,10 @@ export class AuthService {
       displayName: user.displayName,
       profileImage: user.profileImage,
       language: user.language,
-      theme: user.theme
+      theme: user.theme,
+      backgroundImage: user.backgroundImage || '',
+      backgroundBlur: user.backgroundBlur ?? 0,
+      backgroundBrightness: user.backgroundBrightness ?? 50
     }
 
     const token = this.generateToken(userWithoutPassword)
@@ -161,7 +234,7 @@ export class AuthService {
     return this.verifyToken(token)
   }
 
-  static async updateUserProfile(userId: string, updates: Partial<Omit<User, 'id' | 'username' | 'email'>>): Promise<{ success: boolean; user?: User; message?: string }> {
+  static async updateUserProfile(userId: string, updates: Partial<Omit<User, 'id' | 'username' | 'email'>>): Promise<{ success: boolean; user?: User; token?: string; message?: string }> {
     const userIndex = users.findIndex(u => u.id === userId)
     
     if (userIndex === -1) {
@@ -178,6 +251,9 @@ export class AuthService {
       lastLogin: new Date().toISOString()
     }
 
+    // Save to localStorage
+    saveUsers(users)
+
     const updatedUser: User = {
       id: users[userIndex].id,
       username: users[userIndex].username,
@@ -185,12 +261,19 @@ export class AuthService {
       displayName: users[userIndex].displayName,
       profileImage: users[userIndex].profileImage,
       language: users[userIndex].language,
-      theme: users[userIndex].theme
+      theme: users[userIndex].theme,
+      backgroundImage: users[userIndex].backgroundImage || '',
+      backgroundBlur: users[userIndex].backgroundBlur ?? 0,
+      backgroundBrightness: users[userIndex].backgroundBrightness ?? 50
     }
+
+    // Generate new token with updated user data
+    const newToken = this.generateToken(updatedUser)
 
     return {
       success: true,
-      user: updatedUser
+      user: updatedUser,
+      token: newToken
     }
   }
 
@@ -203,6 +286,9 @@ export class AuthService {
       profileImage: user.profileImage,
       language: user.language,
       theme: user.theme,
+      backgroundImage: user.backgroundImage || '',
+      backgroundBlur: user.backgroundBlur ?? 0,
+      backgroundBrightness: user.backgroundBrightness ?? 50,
       createdAt: user.createdAt,
       lastLogin: user.lastLogin
     }))

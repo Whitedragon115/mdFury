@@ -10,6 +10,8 @@ export interface SavedMarkdown {
   updatedAt: string
   tags: string[]
   isPublic: boolean
+  binId?: string
+  password?: string
 }
 
 export interface CreateMarkdownData {
@@ -17,6 +19,8 @@ export interface CreateMarkdownData {
   content: string
   tags?: string[]
   isPublic?: boolean
+  binId?: string
+  password?: string
 }
 
 export interface UpdateMarkdownData {
@@ -24,6 +28,8 @@ export interface UpdateMarkdownData {
   content?: string
   tags?: string[]
   isPublic?: boolean
+  binId?: string
+  password?: string
 }
 
 // Mock storage
@@ -121,13 +127,25 @@ export class MarkdownStorageService {
     await new Promise(resolve => setTimeout(resolve, 400))
     
     const now = new Date().toISOString()
+    const markdownId = data.binId || this.generateId()
+    
+    // Check if binId already exists
+    if (data.binId && markdownStorage.some(doc => doc.id === data.binId || doc.binId === data.binId)) {
+      return {
+        success: false,
+        message: 'Bin ID already exists. Please choose a different ID.'
+      }
+    }
+    
     const newMarkdown: SavedMarkdown = {
-      id: this.generateId(),
+      id: markdownId,
       userId,
       title: data.title.trim() || 'Untitled Document',
       content: data.content,
       tags: data.tags || [],
       isPublic: data.isPublic || false,
+      binId: data.binId,
+      password: data.password,
       createdAt: now,
       updatedAt: now
     }
@@ -195,6 +213,54 @@ export class MarkdownStorageService {
     return markdownStorage
       .filter(doc => doc.isPublic)
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+  }
+
+  static async getPublicMarkdown(id: string, password?: string): Promise<{ 
+    success: boolean; 
+    markdown?: SavedMarkdown; 
+    message?: string;
+    passwordRequired?: boolean;
+  }> {
+    await new Promise(resolve => setTimeout(resolve, 300))
+    
+    const markdown = markdownStorage.find(doc => doc.id === id)
+    
+    if (!markdown) {
+      return {
+        success: false,
+        message: 'Document not found'
+      }
+    }
+
+    // Check if document is public or user has correct password
+    if (!markdown.isPublic && !markdown.password) {
+      return {
+        success: false,
+        message: 'Document is private'
+      }
+    }
+
+    // If document has password protection
+    if (markdown.password) {
+      if (!password) {
+        return {
+          success: false,
+          passwordRequired: true
+        }
+      }
+      
+      if (password !== markdown.password) {
+        return {
+          success: false,
+          message: 'Incorrect password'
+        }
+      }
+    }
+
+    return {
+      success: true,
+      markdown
+    }
   }
 
   static async searchMarkdowns(userId: string, query: string): Promise<SavedMarkdown[]> {

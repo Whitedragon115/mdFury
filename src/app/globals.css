@@ -371,7 +371,7 @@ pre code {
   color: rgb(55 65 81);
   border-radius: 0.5rem;
   padding: 1rem;
-  overflow-x: auto;
+  overflow: auto;
   overflow-wrap: break-word;
   word-wrap: break-word;
   white-space: pre-wrap;
@@ -730,4 +730,162 @@ pre code {
     border-left: none;
     border-right: none;
   }
+}
+
+/* Enhanced backdrop blur for better visual separation */
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+}
+
+/* Override Radix Dialog animations - force only fade effect */
+[data-radix-dialog-overlay] {
+  animation: none !important;
+  transition: opacity 0.3s ease-out !important;
+}
+
+[data-radix-dialog-content] {
+  animation: none !important;
+  transition: opacity 0.3s ease-out !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+/* Dialog fade animations - only opacity changes */
+@keyframes dialog-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes dialog-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* Dialog overlay animations */
+.dialog-fade-overlay[data-state="open"] {
+  animation: dialog-fade-in 0.2s ease-out;
+}
+
+.dialog-fade-overlay[data-state="closed"] {
+  animation: dialog-fade-out 0.15s ease-in;
+}
+
+/* Dialog content animations - keep centered position */
+.dialog-fade-content {
+  transform: translate(-50%, -50%);
+}
+
+.dialog-fade-content[data-state="open"] {
+  animation: dialog-fade-in 0.2s ease-out;
+}
+
+.dialog-fade-content[data-state="closed"] {
+  animation: dialog-fade-out 0.15s ease-in;
+}
+
+/* Beautiful Custom Scrollbars */
+/* Webkit-based browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.7), 
+    rgba(168, 85, 247, 0.7)
+  );
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.9), 
+    rgba(168, 85, 247, 0.9)
+  );
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, 
+    rgba(139, 92, 246, 0.7), 
+    rgba(59, 130, 246, 0.7)
+  );
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, 
+    rgba(139, 92, 246, 0.9), 
+    rgba(59, 130, 246, 0.9)
+  );
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.7) transparent;
+}
+
+.dark * {
+  scrollbar-color: rgba(139, 92, 246, 0.7) transparent;
+}
+
+/* Smooth scrolling for all elements */
+* {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar for specific containers */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.7) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 0.8), 
+    rgba(168, 85, 247, 0.8)
+  );
+  border-radius: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, 
+    rgba(99, 102, 241, 1), 
+    rgba(168, 85, 247, 1)
+  );
+}
+
+/* Animated scrollbar appearance */
+@keyframes scrollbar-appear {
+  from {
+    opacity: 0;
+    transform: scaleY(0);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+::-webkit-scrollbar-thumb {
+  animation: scrollbar-appear 0.3s ease-out;
 }
