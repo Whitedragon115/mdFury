@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useState, useEffect } from 'react'
 import { User, LoginCredentials, AuthResponse, ClientAuthService } from '@/lib/client-auth'
 
 interface AuthContextType {
@@ -18,65 +18,82 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  // Check for existing token on mount
   useEffect(() => {
-    // 檢查本地存儲中的 token
-    const checkAuth = async () => {
-      const token = localStorage.getItem('auth-token')
-      if (token) {
-        try {
-          const result = await ClientAuthService.verifyToken(token)
-          if (result.success && result.user) {
-            setUser(result.user)
+    const checkExistingAuth = async () => {
+      try {
+        const token = localStorage.getItem('auth_token')
+        if (token) {
+          const response = await ClientAuthService.verifyToken(token)
+          if (response.success && response.user) {
+            setUser(response.user)
           } else {
-            localStorage.removeItem('auth-token')
+            localStorage.removeItem('auth_token')
           }
-        } catch (error) {
-          console.error('Failed to verify token:', error)
-          localStorage.removeItem('auth-token')
         }
+      } catch (error) {
+        console.error('Auth check failed:', error)
+        localStorage.removeItem('auth_token')
+      } finally {
+        setIsLoading(false)
       }
-      setIsLoading(false)
     }
-    
-    checkAuth()
+
+    checkExistingAuth()
   }, [])
 
   const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    setIsLoading(true)
     try {
       const response = await ClientAuthService.login(credentials)
       
       if (response.success && response.user && response.token) {
         setUser(response.user)
-        localStorage.setItem('auth-token', response.token)
+        localStorage.setItem('auth_token', response.token)
       }
       
       return response
-    } finally {
-      setIsLoading(false)
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Login failed'
+      }
     }
   }
 
   const logout = () => {
     setUser(null)
-    localStorage.removeItem('auth-token')
+    localStorage.removeItem('auth_token')
   }
 
-  const updateUser = (updatedUser: User) => {
-    setUser(updatedUser)
+  const updateUser = async (updatedUser: User) => {
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        throw new Error('No auth token')
+      }
+
+      const response = await ClientAuthService.updateProfile(updatedUser)
+      
+      if (response.success && response.user && response.token) {
+        setUser(response.user)
+        localStorage.setItem('auth_token', response.token)
+      }
+    } catch (error) {
+      console.error('Failed to update user:', error)
+    }
   }
 
-  const value = {
-    user,
-    isLoading,
-    login,
-    logout,
-    isAuthenticated: !!user,
-    updateUser
-  }
+  const isAuthenticated = !!user
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{
+      user,
+      isLoading,
+      login,
+      logout,
+      isAuthenticated,
+      updateUser,
+    }}>
       {children}
     </AuthContext.Provider>
   )

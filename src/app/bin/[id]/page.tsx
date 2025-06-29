@@ -216,7 +216,7 @@ function BinPreviewContent() {
   if (loading) {
     return (
       <AuthProvider>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-slate-600 dark:text-slate-400">Loading document...</p>
@@ -228,7 +228,7 @@ function BinPreviewContent() {
 
   if (error) {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
           <div className="text-center max-w-md">
             <FileText className="w-16 h-16 text-slate-400 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-2">
@@ -259,7 +259,7 @@ function BinPreviewContent() {
 
   if (accessDenied) {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
           <div className="text-center max-w-md">
             <Lock className="w-16 h-16 text-red-400 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-200 mb-2">
@@ -289,7 +289,7 @@ function BinPreviewContent() {
         
         <div className="relative z-10">
           {/* Header */}
-          <header className="border-b border-slate-200 dark:border-slate-700 bg-white/20 dark:bg-slate-900/40 backdrop-blur-sm sticky top-0 z-20">
+          <header className="border-b border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm sticky top-0 z-20">
             <div className="container mx-auto px-4 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -324,7 +324,7 @@ function BinPreviewContent() {
                     variant="outline" 
                     size="sm" 
                     onClick={shareDocument}
-                    className="bg-gray-900/30 dark:bg-slate-900/50 backdrop-blur-sm border-slate-300 dark:border-slate-600 shadow-lg hover:bg-gray-800/50 dark:hover:bg-slate-700/70 hover:scale-105 transition-all duration-200"
+                    className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-slate-300 dark:border-slate-600 shadow-lg hover:bg-slate-300 dark:hover:bg-slate-600 hover:shadow-xl hover:border-slate-400 dark:hover:border-slate-500 transition-all duration-200"
                   >
                     <Share2 className="w-4 h-4 mr-2" />
                     Share
@@ -333,7 +333,7 @@ function BinPreviewContent() {
                     variant="outline" 
                     size="sm" 
                     onClick={copyToClipboard}
-                    className="bg-gray-900/30 dark:bg-slate-900/50 backdrop-blur-sm border-slate-300 dark:border-slate-600 shadow-lg hover:bg-gray-800/50 dark:hover:bg-slate-700/70 hover:scale-105 transition-all duration-200"
+                    className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-slate-300 dark:border-slate-600 shadow-lg hover:bg-slate-300 dark:hover:bg-slate-600 hover:shadow-xl hover:border-slate-400 dark:hover:border-slate-500 transition-all duration-200"
                   >
                     <Copy className="w-4 h-4 mr-2" />
                     Copy
@@ -342,7 +342,7 @@ function BinPreviewContent() {
                     variant="outline" 
                     size="sm" 
                     onClick={downloadMarkdown}
-                    className="bg-gray-900/30 dark:bg-slate-900/50 backdrop-blur-sm border-slate-300 dark:border-slate-600 shadow-lg hover:bg-gray-800/50 dark:hover:bg-slate-700/70 hover:scale-105 transition-all duration-200"
+                    className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-slate-300 dark:border-slate-600 shadow-lg hover:bg-slate-300 dark:hover:bg-slate-600 hover:shadow-xl hover:border-slate-400 dark:hover:border-slate-500 transition-all duration-200"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download
@@ -401,7 +401,7 @@ function BinPreviewContent() {
                 </div>
 
                 {/* Preview Content */}
-                <Card className="p-8 bg-white/20 dark:bg-slate-900/30 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-xl">
+                <Card className="p-8 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-xl">
                   <div className="markdown-content">
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}

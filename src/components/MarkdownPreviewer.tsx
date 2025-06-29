@@ -9,8 +9,8 @@ import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeRaw from 'rehype-raw'
 import { Card } from '@/components/ui/card'
-import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
+import { Textarea } from '@/components/ui/textarea'
 import { AccountDropdown } from '@/components/AccountDropdown'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import BinControls from '@/components/BinControls'
@@ -319,7 +319,7 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
   return (
     <div className="min-h-screen transition-all duration-500">
       {/* Header */}
-      <header className="border-b border-slate-200 dark:border-slate-700 bg-white/20 dark:bg-slate-900/40 backdrop-blur-sm sticky top-0 z-10">
+      <header className="border-b border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">              
             <button 
@@ -364,7 +364,7 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
         {/* Editor Toolbar - Floating above content */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-3 mt-4 mb-2.5">
           {/* Left: View Mode Buttons */}
-          <div className="flex bg-gray-900/30 dark:bg-slate-900/50 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg p-1 shadow-lg">
+          <div className="flex bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border border-slate-300 dark:border-slate-600 rounded-lg p-1 shadow-lg">
             <Button
               variant={viewMode === 'edit' ? 'default' : 'ghost'}
               size="sm"
@@ -401,7 +401,7 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
               size="sm" 
               onClick={copyToClipboard} 
               title={t('editor.actions.copy')} 
-              className="h-9 whitespace-nowrap bg-gray-900/30 dark:bg-slate-900/50 backdrop-blur-sm border-slate-300 dark:border-slate-600 shadow-lg hover:bg-gray-800/50 dark:hover:bg-slate-700/70 hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-inset"
+              className="h-9 whitespace-nowrap bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-slate-300 dark:border-slate-600 shadow-lg hover:bg-slate-300 dark:hover:bg-slate-600 hover:shadow-xl hover:border-slate-400 dark:hover:border-slate-500 transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-inset"
             >
               <Copy className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">{t('editor.actions.copy')}</span>
@@ -412,7 +412,7 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
               size="sm" 
               onClick={downloadMarkdown} 
               title={t('editor.actions.download')} 
-              className="h-9 whitespace-nowrap bg-gray-900/30 dark:bg-slate-900/50 backdrop-blur-sm border-slate-300 dark:border-slate-600 shadow-lg hover:bg-gray-800/50 dark:hover:bg-slate-700/70 hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-inset"
+              className="h-9 whitespace-nowrap bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-slate-300 dark:border-slate-600 shadow-lg hover:bg-slate-300 dark:hover:bg-slate-600 hover:shadow-xl hover:border-slate-400 dark:hover:border-slate-500 transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-inset"
             >
               <Download className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">{t('editor.actions.download')}</span>
@@ -424,7 +424,7 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
                 size="sm" 
                 onClick={shareDocument} 
                 title="Share document"
-                className="h-9 whitespace-nowrap bg-gray-900/30 dark:bg-slate-900/50 backdrop-blur-sm border-slate-300 dark:border-slate-600 shadow-lg hover:bg-gray-800/50 dark:hover:bg-slate-700/70 hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-inset"
+                className="h-9 whitespace-nowrap bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm border-slate-300 dark:border-slate-600 shadow-lg hover:bg-slate-300 dark:hover:bg-slate-600 hover:shadow-xl hover:border-slate-400 dark:hover:border-slate-500 transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-inset"
               >
                 <Share2 className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Share</span>
@@ -460,7 +460,7 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
           {viewMode === 'split' && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full animate-fade-in view-mode-transition">
               {/* Editor Panel */}
-              <Card className="p-6 bg-white/20 dark:bg-slate-900/30 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-xl transition-all">
+              <Card className="p-6 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-xl transition-all">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                     <FileText className="w-5 h-5" />
@@ -479,7 +479,7 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
               </Card>
 
               {/* Preview Panel */}
-              <Card className="p-6 bg-white/20 dark:bg-slate-900/30 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-xl transition-all">
+              <Card className="p-6 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-xl transition-all">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                     <Eye className="w-5 h-5" />
@@ -503,7 +503,7 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
           )}
 
           {viewMode === 'edit' && (
-            <Card className="p-6 bg-white/20 dark:bg-slate-900/30 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-xl h-full animate-slide-in-left view-mode-transition">
+            <Card className="p-6 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-xl h-full animate-slide-in-left view-mode-transition">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                   <FileText className="w-5 h-5" />
@@ -523,7 +523,7 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
           )}
 
           {viewMode === 'preview' && (
-            <Card className="p-6 bg-white/20 dark:bg-slate-900/30 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-xl h-full animate-slide-in-right view-mode-transition">
+            <Card className="p-6 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-xl h-full animate-slide-in-right view-mode-transition">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                   <Eye className="w-5 h-5" />

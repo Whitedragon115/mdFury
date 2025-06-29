@@ -54,15 +54,6 @@ function EditPageContent() {
       setDocument(doc)
       setHasPermission(true)
       
-      // Copy view link to clipboard with new URL structure
-      const viewUrl = `${window.location.origin}/bin/${id}`
-      try {
-        await navigator.clipboard.writeText(viewUrl)
-        toast.success('View link copied to clipboard')
-      } catch (err) {
-        console.warn('Failed to copy to clipboard:', err)
-      }
-      
     } catch (error) {
       console.error('Failed to load document:', error)
       toast.error('Failed to load document')

@@ -54,20 +54,29 @@ export default function BackgroundLayer({
 
   return (
     <>
-      {/* Background Image Layer */}
-      <div
-        className={`fixed inset-0 -z-20 transition-all duration-500 ${
-          isVisible ? 'opacity-100' : 'opacity-0'
-        }`}
-        style={{
-          backgroundImage: `url(${currentImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundAttachment: 'fixed',
-          backgroundRepeat: 'no-repeat',
-          filter: `blur(${backgroundBlur}px) brightness(${backgroundBrightness}%)`,
-        }}
-      />
+      {/* Container to clip blur overflow and prevent edge glow */}
+      <div className="fixed inset-0 -z-20 overflow-hidden">
+        {/* Enlarged background with blur - extends beyond viewport to hide blur edges 
+            This prevents the CSS blur "growing edge" effect by making the blurred element
+            larger than the viewport and clipping the overflow with the parent container */}
+        <div
+          className={`absolute transition-opacity duration-500 ${
+            isVisible ? 'opacity-100' : 'opacity-0'
+          }`}
+          style={{
+            // Extend beyond viewport by blur amount to hide edge glow
+            top: `-${backgroundBlur * 2}px`,
+            left: `-${backgroundBlur * 2}px`,
+            right: `-${backgroundBlur * 2}px`,
+            bottom: `-${backgroundBlur * 2}px`,
+            backgroundImage: `url(${currentImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            filter: `blur(${backgroundBlur}px) brightness(${backgroundBrightness}%)`,
+          }}
+        />
+      </div>
       
       {/* Overlay for better content readability - only show if image is visible */}
       {isVisible && (

@@ -86,7 +86,7 @@ export default function BinControls({
   const currentlyHasPassword = hasPassword || (password && password !== '••••••••')
 
   return (
-    <div className="bg-white/20 dark:bg-slate-900/30 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-lg p-4 shadow-lg space-y-4">
+    <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border border-slate-200 dark:border-slate-700 rounded-lg p-4 shadow-lg space-y-4">
       {/* Bin ID and Title Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="flex items-center gap-2">

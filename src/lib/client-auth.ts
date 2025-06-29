@@ -91,7 +91,7 @@ export class ClientAuthService {
   }
 
   static getAuthHeaders(): { [key: string]: string } {
-    const token = localStorage.getItem('auth-token')
+    const token = localStorage.getItem('auth_token')
     return token ? { 'Authorization': `Bearer ${token}` } : {}
   }
 
