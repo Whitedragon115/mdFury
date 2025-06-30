@@ -36,7 +36,7 @@ export function Footer() {
   }, [])
 
   return (
-    <footer className="border-t border-slate-200 dark:border-slate-700 bg-white/20 dark:bg-slate-900/40 backdrop-blur-sm mt-auto">
+    <footer className="border-t border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/40 backdrop-blur-sm mt-auto">
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col items-center justify-center space-y-4">
           {/* Links Row */}
@@ -45,7 +45,7 @@ export function Footer() {
               variant="ghost"
               size="sm"
               asChild
-              className="text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+              className="text-slate-800 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
             >
               <a
                 href="https://github.com/Whitedragon115/mdFury"
@@ -62,7 +62,7 @@ export function Footer() {
               variant="ghost"
               size="sm"
               asChild
-              className="text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+              className="text-slate-800 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
             >
               <a
                 href="https://buymeacoffee.com/darklightfury"
@@ -75,12 +75,24 @@ export function Footer() {
               </a>
             </Button>
 
-            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-              <MessageCircle className="w-4 h-4" />
-              Discord: darkingfury
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="text-slate-800 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+            >
+              <a
+                href="https://discord.com/users/968013433482141696"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Discord
+              </a>
+            </Button>
 
-            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+            <div className="flex items-center gap-2 text-sm text-slate-800 dark:text-slate-400">
               <Clock className="w-4 h-4" />
               Uptime: {uptime}
             </div>
