@@ -32,7 +32,7 @@ export interface UpdateMarkdownData {
 
 export class ClientMarkdownService {
   static getAuthHeaders(): { [key: string]: string } {
-    const token = localStorage.getItem('auth_token')
+    const token = localStorage.getItem('auth-token')
     return token ? { 'Authorization': `Bearer ${token}` } : {}
   }
 
@@ -124,7 +124,7 @@ export class ClientMarkdownService {
       
       // Include auth headers if user is logged in
       const headers: { [key: string]: string } = {}
-      const token = localStorage.getItem('auth_token')
+      const token = localStorage.getItem('auth-token')
       if (token) {
         headers['Authorization'] = `Bearer ${token}`
       }

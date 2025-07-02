@@ -90,6 +90,7 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
   const [viewMode, setViewMode] = useState<'split' | 'edit' | 'preview'>('split')
   const [isClient, setIsClient] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isSaved, setIsSaved] = useState(false)
   const isAuthenticated = !!user
 
   // Generate random bin ID
@@ -133,6 +134,10 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
       // Don't generate bin ID until save
     }
   }, [documentId, user, initialDocument])
+
+  useEffect(() => {
+    setIsSaved(false)
+  }, [currentDocTitle, currentBinId, currentTags, isPublic, binPassword, markdown])
 
   const loadDocument = async (docId: string) => {
     if (!user) return
@@ -250,10 +255,15 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
         const result = await ClientMarkdownService.updateMarkdown(currentDocId, saveData)
         
         if (result.success) {
+          setIsSaved(true)
           // Update URL if binId changed
           if (result.markdown && result.markdown.binId) {
             setCurrentBinId(result.markdown.binId)
-            window.history.replaceState(null, '', `/bin/${result.markdown.binId}/edit`)
+            // Redirect to view page after update
+            window.location.href = `/bin/${result.markdown.binId}`
+          } else {
+            // Fallback: use current binId
+            window.location.href = `/bin/${binId}`
           }
           const previewUrl = `${window.location.origin}/bin/${binId}`
           // Auto copy to clipboard
@@ -273,9 +283,9 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
         if (result.success && result.markdown) {
           setCurrentDocId(result.markdown.id)
           setCurrentBinId(result.markdown.binId || result.markdown.id)
-          // Redirect to edit page
+          // Redirect to view page after create
           const binId = result.markdown.binId || result.markdown.id
-          window.location.href = `/bin/${binId}/edit`
+          window.location.href = `/bin/${binId}`
           const previewUrl = `${window.location.origin}/bin/${binId}`
           // Auto copy view link to clipboard
           try {
@@ -418,7 +428,7 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
               <span className="hidden sm:inline">{t('editor.actions.download')}</span>
               <span className="sm:hidden">Download</span>
             </Button>
-            {currentBinId && (
+            {isSaved && currentBinId && (
               <Button 
                 variant="outline" 
                 size="sm" 

@@ -13,16 +13,17 @@ interface ThemeProviderProps {
 export function ThemeProvider({ 
   children, 
   defaultTheme = 'dark',
-  enableSystem = true,
+  enableSystem = false,
   disableTransitionOnChange = false,
   ...props 
 }: ThemeProviderProps) {
   return (
     <NextThemesProvider 
       attribute="class"
-      defaultTheme={defaultTheme}
-      enableSystem={enableSystem}
+      defaultTheme="dark"
+      enableSystem={false}
       disableTransitionOnChange={disableTransitionOnChange}
+      storageKey="mdbin-theme"
       {...props}
     >
       {children}

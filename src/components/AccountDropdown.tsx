@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from 'next-themes'
 import { useAuth } from '@/contexts/AuthContext'
+import { ClientAuthService } from '@/lib/client-auth'
 import { Button } from '@/components/ui/button'
 import SettingsPanel from '@/components/SettingsPanel'
 import { 
@@ -18,28 +19,25 @@ import {
   Monitor
 } from 'lucide-react'
 
+
 export function AccountDropdown() {
   const { t } = useTranslation()
-  const { user, logout } = useAuth()
-  const { theme, setTheme } = useTheme()
+  const { user, logout, updateUser } = useAuth()
+  const { theme } = useTheme()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Handle click outside to close dropdown
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false)
       }
     }
-
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside)
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside)
-      }
+      return () => document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [isOpen])
 
@@ -55,8 +53,19 @@ export function AccountDropdown() {
     setIsOpen(false)
   }
 
-  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
-    setTheme(newTheme)
+  const handleThemeChange = async (newTheme: 'light' | 'dark' | 'system') => {
+    if (user) {
+      try {
+        const result = await ClientAuthService.updateProfile({ theme: newTheme })
+        if (result.success && result.user) {
+          setIsOpen(false)
+          updateUser(result.user)
+          return
+        }
+      } catch (error) {
+        console.error('Failed to update theme:', error)
+      }
+    }
     setIsOpen(false)
   }
 

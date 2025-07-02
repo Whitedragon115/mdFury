@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { ClientMarkdownService } from '@/lib/client-markdown'
 import { ClientAuthService } from '@/lib/client-auth'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
+import { AuthBasedThemeController } from '@/components/AuthBasedThemeController'
 import PasswordPage from '@/components/PasswordPage'
 import LoginModal from '@/components/LoginModal'
 import BackgroundLayer from '@/components/BackgroundLayer'
@@ -431,6 +432,7 @@ function BinPreviewContent() {
 export default function BinPreviewPage() {
   return (
     <AuthProvider>
+      <AuthBasedThemeController />
       <BinPreviewContent />
     </AuthProvider>
   )

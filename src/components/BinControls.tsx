@@ -92,7 +92,7 @@ export default function BinControls({
         <div className="flex items-center gap-2">
           <Label htmlFor="binId" className="text-sm font-medium whitespace-nowrap">
             <Hash className="w-4 h-4 inline mr-1" />
-            Bin ID:
+            ID:
           </Label>
           <div className="flex-1 flex gap-2">
             <Input
@@ -100,7 +100,7 @@ export default function BinControls({
               value={binId}
               onChange={(e) => onBinIdChange(e.target.value)}
               placeholder="Enter custom ID..."
-              className="h-8 text-sm"
+              className="h-8 text-sm bg-white/90 dark:bg-slate-800"
               maxLength={20}
             />
             <Button
@@ -124,7 +124,7 @@ export default function BinControls({
             value={title}
             onChange={(e) => onTitleChange(e.target.value)}
             placeholder={t('editor.placeholders.title')}
-            className="h-8 text-sm flex-1"
+            className="h-8 text-sm flex-1 bg-white/90 dark:bg-slate-800"
           />
         </div>
       </div>
@@ -141,7 +141,7 @@ export default function BinControls({
             value={tags.join(', ')}
             onChange={(e) => handleTagsInput(e.target.value)}
             placeholder={t('editor.placeholders.tags')}
-            className="h-8 text-sm flex-1"
+            className="h-8 text-sm flex-1 bg-white/90 dark:bg-slate-800"
           />
         </div>
 
@@ -185,7 +185,7 @@ export default function BinControls({
                   value={password}
                   onChange={(e) => onPasswordChange(e.target.value)}
                   placeholder={password === '••••••••' ? 'Change password...' : 'Enter password...'}
-                  className="h-8 text-sm w-32"
+                  className="h-8 text-sm w-32 bg-white dark:bg-slate-800"
                   onFocus={() => {
                     // Clear placeholder when user starts typing
                     if (password === '••••••••') {

@@ -18,7 +18,7 @@ model User {
   displayName          String?
   profileImage         String?
   language             String     @default("en")
-  theme                String     @default("system") // 'light' | 'dark' | 'system'
+  theme                String     @default("dark") // 'light' | 'dark' | 'system'
   backgroundImage      String?
   backgroundBlur       Int        @default(0)
   backgroundBrightness Int        @default(70)

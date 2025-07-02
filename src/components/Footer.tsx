@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Github, MessageCircle, Coffee, Clock } from 'lucide-react'
+import { Github, MessageCircle, Coffee, Clock, ChartBar, ChartArea } from 'lucide-react'
 
 export function Footer() {
   const [uptime, setUptime] = useState('')
@@ -36,7 +36,7 @@ export function Footer() {
   }, [])
 
   return (
-    <footer className="border-t border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-900/40 backdrop-blur-sm mt-auto">
+    <footer className="border-t border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/40 backdrop-blur-sm mt-auto">
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col items-center justify-center space-y-4">
           {/* Links Row */}
@@ -74,7 +74,7 @@ export function Footer() {
                 Support
               </a>
             </Button>
-
+            
             <Button
               variant="ghost"
               size="sm"
@@ -88,13 +88,15 @@ export function Footer() {
                 className="flex items-center gap-2"
               >
                 <MessageCircle className="w-4 h-4" />
-                Discord
+                Discord: darkingfury
               </a>
             </Button>
 
             <div className="flex items-center gap-2 text-sm text-slate-800 dark:text-slate-400">
               <Clock className="w-4 h-4" />
-              Uptime: {uptime}
+              <p className='bold'>
+                Uptime: {uptime}
+              </p>
             </div>
           </div>
         </div>

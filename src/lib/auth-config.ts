@@ -1,5 +1,5 @@
 import { NextAuthOptions } from 'next-auth'
-// import GoogleProvider from 'next-auth/providers/google'
+import GoogleProvider from 'next-auth/providers/google'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from './prisma'
@@ -8,6 +8,17 @@ import { AuthService } from './auth'
 export const authConfig: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
+    }),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -54,6 +65,7 @@ export const authConfig: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user, account }) {
+      // Always set default theme to dark if not present
       if (user) {
         token.id = user.id
         token.username = (user as any).username
@@ -64,10 +76,10 @@ export const authConfig: NextAuthOptions = {
         token.backgroundBlur = (user as any).backgroundBlur || 0
         token.backgroundBrightness = (user as any).backgroundBrightness || 70
         token.backgroundOpacity = (user as any).backgroundOpacity || 0.1
+      } else {
+        // Not logged in, force theme to dark
+        token.theme = 'dark'
       }
-      
-      // Google OAuth 已移除
-      
       return token
     },
     async session({ session, token }) {

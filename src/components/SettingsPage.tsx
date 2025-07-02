@@ -26,7 +26,7 @@ export default function SettingsPage() {
     email: '',
     profileImage: '',
     language: 'en',
-    theme: 'system' as 'light' | 'dark' | 'system'
+    theme: 'dark' as 'light' | 'dark' | 'system'
   })
 
   useEffect(() => {
@@ -36,14 +36,23 @@ export default function SettingsPage() {
         email: user.email || '',
         profileImage: user.profileImage || '',
         language: user.language || 'en',
-        theme: (theme as 'light' | 'dark' | 'system') || 'system'
+        theme: (user.theme as 'light' | 'dark' | 'system') || 'dark'
       })
+    } else {
+      // Force dark theme for non-logged in users
+      document.documentElement.classList.add('dark')
+      document.documentElement.classList.remove('light')
+      setFormData(prev => ({ ...prev, theme: 'dark' }))
     }
   }, [user, theme])
 
-  // If user is not authenticated, show login form
+  // If user is not authenticated, show login form with forced dark theme
   if (!user) {
-    return <LoginForm />
+    return (
+      <div className="dark">
+        <LoginForm />
+      </div>
+    )
   }
 
   const handleSave = async () => {
@@ -64,7 +73,7 @@ export default function SettingsPage() {
           i18n.changeLanguage(formData.language)
         }
 
-        // Update theme if changed using next-themes
+        // Only allow theme changes for logged in users
         if (formData.theme !== theme) {
           setTheme(formData.theme)
         }

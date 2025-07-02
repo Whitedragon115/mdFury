@@ -268,7 +268,7 @@ export class AuthService {
             password: await bcrypt.hash('admin123', 10),
             displayName: 'Administrator',
             language: 'en',
-            theme: 'system'
+            theme: 'dark'
           }
         })
       }
@@ -281,7 +281,7 @@ export class AuthService {
             password: await bcrypt.hash('demo123', 10),
             displayName: 'Demo User',
             language: 'en',
-            theme: 'system'
+            theme: 'dark'
           }
         })
       }

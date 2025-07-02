@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import { Card } from '@/components/ui/card'
@@ -19,6 +19,12 @@ export default function LoginForm() {
   })
   const [showPassword, setShowPassword] = useState(false)
   const { login, isLoading } = useAuth()
+
+  // Force dark theme for login page
+  useEffect(() => {
+    document.documentElement.classList.add('dark')
+    document.documentElement.classList.remove('light')
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
