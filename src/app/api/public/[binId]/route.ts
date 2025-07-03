@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { MarkdownStorageService } from '@/lib/markdown-storage'
+import { MarkdownStorageService } from '@/lib/api/markdown-storage'
 import { AuthService } from '@/lib/auth'
 
 async function getUserFromToken(request: NextRequest) {

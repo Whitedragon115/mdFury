@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, usePathname } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 import ReactMarkdown from 'react-markdown'
@@ -11,10 +11,10 @@ import rehypeRaw from 'rehype-raw'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { AccountDropdown } from '@/components/AccountDropdown'
-import { LanguageSwitcher } from '@/components/LanguageSwitcher'
-import BinControls from '@/components/BinControls'
-import { ClientMarkdownService, SavedMarkdown } from '@/lib/client-markdown'
+import { AccountDropdown } from '@/components/common'
+import { LanguageSwitcher } from '@/components/common'
+import { BinControls } from '@/components/forms'
+import { ClientMarkdownService, SavedMarkdown } from '@/lib/api'
 import { useAuth } from '@/contexts/AuthContext'
 import { 
   FileText, 
@@ -79,6 +79,7 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
   const { t } = useTranslation()
   const { user, logout } = useAuth()
   const searchParams = useSearchParams()
+  const pathname = usePathname()
   const documentId = searchParams.get('doc')
   const [markdown, setMarkdown] = useState(initialMarkdown)
   const [currentDocId, setCurrentDocId] = useState<string>()
@@ -428,7 +429,7 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
               <span className="hidden sm:inline">{t('editor.actions.download')}</span>
               <span className="sm:hidden">Download</span>
             </Button>
-            {isSaved && currentBinId && (
+            {pathname && pathname.startsWith('/bin/') && pathname.endsWith('/edit') && currentBinId && (
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -447,22 +448,40 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
         {/* Bin Controls - Only show for authenticated users */}
         {isAuthenticated && (
           <div className="mt-4 mb-6">
-            <BinControls
-              title={currentDocTitle}
-              binId={currentBinId}
-              tags={currentTags}
-              isPublic={isPublic}
-              hasPassword={!!binPassword}
-              password={binPassword}
-              isLoading={isSaving}
-              onTitleChange={setCurrentDocTitle}
-              onBinIdChange={setCurrentBinId}
-              onTagsChange={setCurrentTags}
-              onPublicChange={setIsPublic}
-              onPasswordChange={setBinPassword}
-              onSave={handleSave}
-              onGenerateId={setGeneratedBinId}
-            />
+            {/** 只有首頁（無 documentId）時顯示 binId 欄位 **/}
+            { !documentId ? (
+              <BinControls
+                title={currentDocTitle}
+                binId={currentBinId}
+                tags={currentTags}
+                isPublic={isPublic}
+                hasPassword={!!binPassword}
+                password={binPassword}
+                isLoading={isSaving}
+                onTitleChange={setCurrentDocTitle}
+                onBinIdChange={setCurrentBinId}
+                onTagsChange={setCurrentTags}
+                onPublicChange={setIsPublic}
+                onPasswordChange={setBinPassword}
+                onSave={handleSave}
+                onGenerateId={setGeneratedBinId}
+                disabledBinId={false}
+              />
+            ) : (
+              <BinControls
+                title={currentDocTitle}
+                tags={currentTags}
+                isPublic={isPublic}
+                hasPassword={!!binPassword}
+                password={binPassword}
+                isLoading={isSaving}
+                onTitleChange={setCurrentDocTitle}
+                onTagsChange={setCurrentTags}
+                onPublicChange={setIsPublic}
+                onPasswordChange={setBinPassword}
+                onSave={handleSave}
+              />
+            )}
           </div>
         )}
 

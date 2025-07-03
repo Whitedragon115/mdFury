@@ -3,12 +3,12 @@
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { ClientMarkdownService } from '@/lib/client-markdown'
-import { SavedMarkdown } from '@/lib/client-markdown'
+import { ClientMarkdownService } from '@/lib/api'
+import { SavedMarkdown } from '@/lib/api'
 import { AuthProvider } from '@/contexts/AuthContext'
-import { AuthBasedThemeController } from '@/components/AuthBasedThemeController'
+import { AuthBasedThemeController } from '@/components/providers'
 import MarkdownPreviewer from '@/components/MarkdownPreviewer'
-import BackgroundLayer from '@/components/BackgroundLayer'
+import { BackgroundLayer } from '@/components/layout'
 import toast from 'react-hot-toast'
 
 function EditPageContent() {

@@ -1,6 +1,6 @@
 import { AuthProvider } from '@/contexts/AuthContext'
-import { AuthBasedThemeController } from '@/components/AuthBasedThemeController'
-import LoginForm from '@/components/LoginForm'
+import { AuthBasedThemeController } from '@/components/providers'
+import { LoginForm } from '@/components/forms'
 
 export default function LoginPage() {
   return (

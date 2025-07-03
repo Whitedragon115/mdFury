@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import MarkdownPreviewer from './MarkdownPreviewer'
-import BackgroundLayer from './BackgroundLayer'
+import { BackgroundLayer } from '@/components/layout'
 import { Loader2 } from 'lucide-react'
 
 export default function App() {
