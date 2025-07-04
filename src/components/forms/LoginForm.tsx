@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { useAuth } from '@/contexts/AuthContext'
 import { LanguageSwitcher } from '@/components/common'
 import { FileText, LogIn, Eye, EyeOff, Loader2 } from 'lucide-react'
+import OAuthButtons from './OAuthButtons'
 
 export default function LoginForm() {
   const { t } = useTranslation()
@@ -52,6 +53,11 @@ export default function LoginForm() {
   const handleDemoLogin = (username: string, password: string) => {
     setCredentials({ username, password })
   }
+
+  // Check if registration is disabled
+  const isRegistrationDisabled = process.env.NODE_ENV === 'production' 
+    ? false // In production, we'll fetch this from an API
+    : process.env.DISABLE_REGISTRATION === 'true'
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -145,6 +151,32 @@ export default function LoginForm() {
               )}
             </Button>
           </form>
+
+          {/* OAuth Buttons */}
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t border-slate-600" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-slate-800 px-2 text-slate-400">{t('auth.orContinueWith')}</span>
+              </div>
+            </div>
+            <div className="mt-6">
+              <OAuthButtons />
+            </div>
+          </div>
+
+          {/* Register Link - only show if registration is enabled */}
+          <div className="mt-6 text-center">
+            <span className="text-slate-400">{t('auth.dontHaveAccount')} </span>
+            <a
+              href="/register"
+              className="text-blue-400 hover:text-blue-300 font-medium"
+            >
+              {t('auth.registerHere')}
+            </a>
+          </div>
         </Card>
 
         {/* Demo Accounts */}

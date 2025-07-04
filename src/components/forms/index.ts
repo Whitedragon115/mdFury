@@ -1,3 +1,5 @@
 export { default as BinControls } from './BinControls'
 export { default as LoginForm } from './LoginForm'
+export { default as RegisterForm } from './RegisterForm'
+export { default as OAuthButtons } from './OAuthButtons'
 export { PasswordForm } from './PasswordForm'

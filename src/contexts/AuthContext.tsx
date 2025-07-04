@@ -1,12 +1,13 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
-import { User, LoginCredentials, AuthResponse, ClientAuthService } from '@/lib/auth/client-auth'
+import { User, LoginCredentials, RegisterCredentials, AuthResponse, ClientAuthService } from '@/lib/auth/client-auth'
 
 interface AuthContextType {
   user: User | null
   isLoading: boolean
   login: (credentials: LoginCredentials) => Promise<AuthResponse>
+  register: (credentials: RegisterCredentials) => Promise<AuthResponse>
   logout: () => void
   isAuthenticated: boolean
   updateUser: (user: User) => void
@@ -60,6 +61,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const register = async (credentials: RegisterCredentials): Promise<AuthResponse> => {
+    try {
+      const response = await ClientAuthService.register(credentials)
+      
+      if (response.success && response.user && response.token) {
+        setUser(response.user)
+        localStorage.setItem('auth_token', response.token)
+      }
+      
+      return response
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Registration failed'
+      }
+    }
+  }
+
   const logout = () => {
     setUser(null)
     localStorage.removeItem('auth_token')
@@ -90,6 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       isLoading,
       login,
+      register,
       logout,
       isAuthenticated,
       updateUser,

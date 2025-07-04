@@ -18,6 +18,14 @@ export interface LoginCredentials {
   password: string
 }
 
+export interface RegisterCredentials {
+  username: string
+  email: string
+  password: string
+  confirmPassword: string
+  displayName?: string
+}
+
 export interface AuthResponse {
   success: boolean
   user?: User
@@ -39,6 +47,26 @@ export class ClientAuthService {
       return await response.json()
     } catch (error) {
       console.error('Login error:', error)
+      return {
+        success: false,
+        message: 'Network error occurred'
+      }
+    }
+  }
+
+  static async register(credentials: RegisterCredentials): Promise<AuthResponse> {
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      })
+
+      return await response.json()
+    } catch (error) {
+      console.error('Registration error:', error)
       return {
         success: false,
         message: 'Network error occurred'

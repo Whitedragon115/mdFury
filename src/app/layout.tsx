@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { CustomToaster } from "@/components/common";
 import { Footer } from "@/components/layout";
-import { ThemeProvider } from "@/components/providers";
+import { ThemeProvider, NextAuthProvider } from "@/components/providers";
 
 
 
@@ -24,19 +24,21 @@ export default function RootLayout({
       <body
         className={"antialiased min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col"}
       >
-        <ThemeProvider 
-          defaultTheme="dark" 
-          enableSystem={true}
-          disableTransitionOnChange={false}
-        >
-          <I18nProvider>
-            <div className="flex-1">
-              {children}
-            </div>
-            <Footer />
-          </I18nProvider>
-          <CustomToaster />
-        </ThemeProvider>
+        <NextAuthProvider>
+          <ThemeProvider 
+            defaultTheme="dark" 
+            enableSystem={true}
+            disableTransitionOnChange={false}
+          >
+            <I18nProvider>
+              <div className="flex-1">
+                {children}
+              </div>
+              <Footer />
+            </I18nProvider>
+            <CustomToaster />
+          </ThemeProvider>
+        </NextAuthProvider>
       </body>
     </html>
   );

@@ -36,6 +36,14 @@ export interface LoginCredentials {
   password: string
 }
 
+export interface RegisterCredentials {
+  username: string
+  email: string
+  password: string
+  confirmPassword: string
+  displayName?: string
+}
+
 export interface AuthResponse {
   success: boolean
   user?: User
@@ -153,6 +161,100 @@ export class AuthService {
       return {
         success: false,
         message: 'Login failed'
+      }
+    }
+  }
+
+  static async register(credentials: RegisterCredentials): Promise<AuthResponse> {
+    try {
+      // Validate input
+      if (!credentials.username || !credentials.email || !credentials.password) {
+        return {
+          success: false,
+          message: 'Username, email, and password are required'
+        }
+      }
+
+      if (credentials.password !== credentials.confirmPassword) {
+        return {
+          success: false,
+          message: 'Passwords do not match'
+        }
+      }
+
+      if (credentials.password.length < 6) {
+        return {
+          success: false,
+          message: 'Password must be at least 6 characters long'
+        }
+      }
+
+      // Check if username already exists
+      const existingUserByUsername = await prisma.user.findUnique({
+        where: { username: credentials.username }
+      })
+
+      if (existingUserByUsername) {
+        return {
+          success: false,
+          message: 'Username already exists'
+        }
+      }
+
+      // Check if email already exists
+      const existingUserByEmail = await prisma.user.findUnique({
+        where: { email: credentials.email }
+      })
+
+      if (existingUserByEmail) {
+        return {
+          success: false,
+          message: 'Email already exists'
+        }
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(credentials.password, 12)
+
+      // Create user
+      const newUser = await prisma.user.create({
+        data: {
+          username: credentials.username,
+          email: credentials.email,
+          password: hashedPassword,
+          displayName: credentials.displayName || credentials.username,
+          language: 'en',
+          theme: 'dark'
+        }
+      })
+
+      const userWithoutPassword: User = {
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+        displayName: newUser.displayName ?? newUser.username,
+        profileImage: newUser.profileImage ?? '',
+        language: newUser.language,
+        theme: newUser.theme as 'light' | 'dark' | 'system',
+        backgroundImage: newUser.backgroundImage ?? '',
+        backgroundBlur: newUser.backgroundBlur,
+        backgroundBrightness: newUser.backgroundBrightness,
+        backgroundOpacity: newUser.backgroundOpacity
+      }
+
+      const token = this.generateToken(userWithoutPassword)
+
+      return {
+        success: true,
+        user: userWithoutPassword,
+        token,
+        message: 'Registration successful'
+      }
+    } catch (error) {
+      console.error('Registration error:', error)
+      return {
+        success: false,
+        message: 'Registration failed. Please try again.'
       }
     }
   }
