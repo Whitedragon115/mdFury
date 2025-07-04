@@ -145,15 +145,15 @@ export class MarkdownStorageService {
           message: 'Bin ID already exists. Please choose a different ID.'
         }
       }
-      
-      const newMarkdown = await prisma.markdown.create({
+        const newMarkdown = await prisma.markdown.create({
         data: {
           binId: binId,
           userId,
           title: data.title.trim() || 'Untitled Document',
           content: data.content,
           tags: data.tags ? JSON.stringify(data.tags) : null,
-          isPublic: data.isPublic !== false, // Default to public
+          // If password is provided, force document to be public
+          isPublic: data.password ? true : (data.isPublic !== false), // Default to public
           password: data.password || null
         }
       })
@@ -224,16 +224,21 @@ export class MarkdownStorageService {
           }
         }
       }
-      
-      const updatedMarkdown = await prisma.markdown.update({
+        const updatedMarkdown = await prisma.markdown.update({
         where: { id },
         data: {
           ...(data.title !== undefined && { title: data.title.trim() || 'Untitled Document' }),
           ...(data.content !== undefined && { content: data.content }),
           ...(data.tags !== undefined && { tags: JSON.stringify(data.tags) }),
-          ...(data.isPublic !== undefined && { isPublic: data.isPublic }),
           ...(data.binId !== undefined && { binId: data.binId }),
-          ...(data.password !== undefined && { password: data.password || null })
+          // Handle password and isPublic logic
+          ...(data.password !== undefined && { password: data.password || null }),
+          // If password is being set or already exists, force document to be public
+          ...(data.isPublic !== undefined && { 
+            isPublic: (data.password || existingDoc.password) ? true : data.isPublic 
+          }),
+          // If only password is being changed, make sure document stays public
+          ...((data.password !== undefined && data.password) && { isPublic: true })
         }
       })
       

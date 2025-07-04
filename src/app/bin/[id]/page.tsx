@@ -7,7 +7,7 @@ import { ClientMarkdownService } from '@/lib/api'
 import { ClientAuthService } from '@/lib/auth/client-auth'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { AuthBasedThemeController } from '@/components/providers'
-import PasswordPage from '@/components/pages/PasswordPage'
+import { PasswordForm } from '@/components/forms/PasswordForm'
 import { LoginModal } from '@/components/common'
 import { BackgroundLayer } from '@/components/layout'
 import ReactMarkdown from 'react-markdown'
@@ -246,15 +246,23 @@ function BinPreviewContent() {
         </div>
     )
   }
-
   if (passwordRequired) {
     return (
-        <PasswordPage
-          onPasswordSubmit={handlePasswordSubmit}
-          onBack={handleBackToHome}
-          loading={passwordAttempting}
-          error={passwordError || undefined}
+      <div>
+        <BackgroundLayer
+          backgroundImage={ownerSettings.backgroundImage}
+          backgroundBlur={ownerSettings.backgroundBlur || 0}
+          backgroundBrightness={ownerSettings.backgroundBrightness || 70}
+          backgroundOpacity={ownerSettings.backgroundOpacity || 0.1}
         />
+        <PasswordForm
+          title="Document Password Required"
+          onSubmit={handlePasswordSubmit}
+          onCancel={handleBackToHome}
+          error={passwordError}
+          isLoading={passwordAttempting}
+        />
+      </div>
     )
   }
 

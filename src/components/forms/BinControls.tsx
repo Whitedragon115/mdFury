@@ -64,7 +64,6 @@ export default function BinControls({
     const newTags = value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
     onTagsChange(newTags)
   }
-
   const togglePasswordProtection = () => {
     const isPlaceholder = password === '••••••••'
     const actuallyHasPassword = hasPassword || (password && !isPlaceholder)
@@ -82,7 +81,20 @@ export default function BinControls({
       }
       setShowPasswordField(true)
       setShowPassword(false)
+      
+      // If adding password protection, make document public
+      if (!isPublic) {
+        onPublicChange(true)
+      }
     }
+  }
+
+  const handlePublicChange = (newIsPublic: boolean) => {
+    // If trying to make document private while it has password protection, prevent it
+    if (!newIsPublic && currentlyHasPassword) {
+      return
+    }
+    onPublicChange(newIsPublic)
   }
 
   const currentlyHasPassword = hasPassword || (password && password !== '••••••••')
@@ -148,28 +160,30 @@ export default function BinControls({
             placeholder={t('editor.placeholders.tags')}
             className="h-8 text-sm flex-1 bg-white/90 dark:bg-slate-800"
           />
-        </div>
-
-        <div className="flex items-center justify-end gap-3">
+        </div>        <div className="flex items-center justify-end gap-3">
           {/* Public/Private Toggle */}
-          <Button
-            variant={isPublic ? "default" : "outline"}
-            size="sm"
-            onClick={() => onPublicChange(!isPublic)}
-            className="h-8 px-3"
-          >
-            {isPublic ? (
-              <>
-                <Eye className="w-3 h-3 mr-1" />
-                Public
-              </>
-            ) : (
-              <>
-                <EyeOff className="w-3 h-3 mr-1" />
-                Private
-              </>
-            )}
-          </Button>
+          <div className="relative">            <Button
+              variant={isPublic ? "default" : "outline"}
+              size="sm"
+              onClick={() => handlePublicChange(!isPublic)}
+              className={`h-8 px-3 ${!isPublic && currentlyHasPassword ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={!isPublic && currentlyHasPassword ? true : false}
+              title={currentlyHasPassword && !isPublic ? 'Cannot make password-protected document private' : ''}
+            >
+              {isPublic ? (
+                <>
+                  <Eye className="w-3 h-3 mr-1" />
+                  Public
+                </>
+              ) : (
+                <>
+                  <EyeOff className="w-3 h-3 mr-1" />
+                  Private
+                </>
+              )}
+            </Button>
+            {/* 移除警告文字 */}
+          </div>
 
           {/* Password Protection */}
           <div className="flex items-center gap-2">

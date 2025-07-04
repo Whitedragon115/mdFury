@@ -33,15 +33,28 @@ export async function GET(
     
     if (!result.success) {
       if (result.requiresAuth) {
-        return NextResponse.json(result, { status: 401 })
+        return NextResponse.json(
+          { success: false, message: 'Authentication required' },
+          { status: 401 }
+        )
       }
       if (result.accessDenied) {
-        return NextResponse.json(result, { status: 403 })
+        return NextResponse.json(
+          { success: false, message: 'Access denied' },
+          { status: 403 }
+        )
       }
       if (result.passwordRequired) {
-        return NextResponse.json(result, { status: 423 }) // Locked
+        return NextResponse.json(
+          { success: false, message: 'Password required' },
+          { status: 423 }
+        )
       }
-      return NextResponse.json(result, { status: 404 })
+      // For any other failure, return 404 to not reveal the existence of private bins
+      return NextResponse.json(
+        { success: false, message: 'Document not found' },
+        { status: 404 }
+      )
     }
     
     return NextResponse.json(result)

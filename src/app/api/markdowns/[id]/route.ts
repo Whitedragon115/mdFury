@@ -52,10 +52,16 @@ export async function PUT(
         { success: false, message: 'Authentication required' },
         { status: 401 }
       )
-    }
-
-    const { id } = await params
+    }    const { id } = await params
     const data = await request.json()
+    
+    // Validate that password-protected documents cannot be private
+    if (data.password && data.isPublic === false) {
+      return NextResponse.json(
+        { success: false, message: 'Password-protected documents must be public' },
+        { status: 400 }
+      )
+    }
     
     const result = await MarkdownStorageService.updateMarkdown(id, user.id, data)
     

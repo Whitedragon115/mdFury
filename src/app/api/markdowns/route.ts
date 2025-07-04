@@ -45,9 +45,16 @@ export async function POST(request: NextRequest) {
         { success: false, message: 'Authentication required' },
         { status: 401 }
       )
+    }    const data = await request.json()
+    
+    // Validate that password-protected documents cannot be private
+    if (data.password && data.isPublic === false) {
+      return NextResponse.json(
+        { success: false, message: 'Password-protected documents must be public' },
+        { status: 400 }
+      )
     }
-
-    const data = await request.json()
+    
     const result = await MarkdownStorageService.saveMarkdown(user.id, data)
     
     return NextResponse.json(result)

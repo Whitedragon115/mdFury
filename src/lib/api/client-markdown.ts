@@ -108,7 +108,6 @@ export class ClientMarkdownService {
       }
     }
   }
-
   static async getPublicMarkdown(binId: string, password?: string): Promise<{ 
     success: boolean; 
     markdown?: SavedMarkdown; 
@@ -130,7 +129,39 @@ export class ClientMarkdownService {
       }
       
       const response = await fetch(url, { headers })
-      return await response.json()
+      const data = await response.json()
+      
+      // Handle different status codes
+      if (response.status === 423) {
+        // Password required
+        return {
+          success: false,
+          passwordRequired: true,
+          message: data.message || 'Password required'
+        }
+      } else if (response.status === 401) {
+        // Authentication required
+        return {
+          success: false,
+          requiresAuth: true,
+          message: data.message || 'Authentication required'
+        }
+      } else if (response.status === 403) {
+        // Access denied
+        return {
+          success: false,
+          accessDenied: true,
+          message: data.message || 'Access denied'
+        }
+      } else if (response.status === 404) {
+        // Not found
+        return {
+          success: false,
+          message: data.message || 'Document not found'
+        }
+      }
+      
+      return data
     } catch (error) {
       console.error('Failed to get public markdown:', error)
       return {
