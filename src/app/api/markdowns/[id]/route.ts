@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { MarkdownStorageService } from '@/lib/api/markdown-storage'
-import { AuthService } from '@/lib/auth'
+import { AuthService } from '@/lib/auth/index'
 
 async function getUserFromToken(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
@@ -15,11 +15,11 @@ async function getUserFromToken(request: NextRequest) {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getUserFromToken(request)
-    const { id } = params
+    const { id } = await params
     
     const markdown = await MarkdownStorageService.getMarkdownById(id, user?.id)
     
@@ -42,7 +42,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getUserFromToken(request)
@@ -54,7 +54,7 @@ export async function PUT(
       )
     }
 
-    const { id } = params
+    const { id } = await params
     const data = await request.json()
     
     const result = await MarkdownStorageService.updateMarkdown(id, user.id, data)
@@ -71,7 +71,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getUserFromToken(request)
@@ -83,7 +83,7 @@ export async function DELETE(
       )
     }
 
-    const { id } = params
+    const { id } = await params
     
     const result = await MarkdownStorageService.deleteMarkdown(id, user.id)
     

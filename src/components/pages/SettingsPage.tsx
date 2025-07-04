@@ -11,7 +11,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { AuthService } from '@/lib/auth'
+import { AuthService } from '@/lib/auth/index'
 import { Settings, User, Save, Loader2, ArrowLeft } from 'lucide-react'
 import { LoginForm } from '@/components/forms'
 

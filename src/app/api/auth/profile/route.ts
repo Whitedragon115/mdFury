@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { AuthService } from '@/lib/auth'
+import { AuthService } from '@/lib/auth/index'
 
 async function getUserFromToken(request: NextRequest) {
   const authHeader = request.headers.get('authorization')

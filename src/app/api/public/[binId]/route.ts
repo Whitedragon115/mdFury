@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { MarkdownStorageService } from '@/lib/api/markdown-storage'
-import { AuthService } from '@/lib/auth'
+import { AuthService } from '@/lib/auth/index'
 
 async function getUserFromToken(request: NextRequest) {
   const authHeader = request.headers.get('authorization')
@@ -15,10 +15,10 @@ async function getUserFromToken(request: NextRequest) {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { binId: string } }
+  { params }: { params: Promise<{ binId: string }> }
 ) {
   try {
-    const { binId } = params
+    const { binId } = await params
     const url = new URL(request.url)
     const password = url.searchParams.get('password')
     
