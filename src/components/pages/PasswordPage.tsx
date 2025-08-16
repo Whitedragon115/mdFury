@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
@@ -9,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Lock, Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react'
 
 interface PasswordPageProps {
-  onPasswordSubmit: (password: string) => void
+  onPasswordSubmit: (_password: string) => void
   onBack: () => void
   loading?: boolean
   error?: string
@@ -21,7 +20,8 @@ export default function PasswordPage({
   loading = false, 
   error 
 }: PasswordPageProps) {
-  const { t } = useTranslation()
+  //WARN
+  // const { t } = useTranslation()
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 

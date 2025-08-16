@@ -1,12 +1,12 @@
 'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
 import MarkdownPreviewer from './MarkdownPreviewer'
 import { BackgroundLayer } from '@/components/layout'
 import { Loader2 } from 'lucide-react'
+import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
 
 export default function App() {
-  const { isLoading, user } = useAuth()
+  const { isLoading, user } = useIntegratedAuth()
 
   if (isLoading) {
     return (

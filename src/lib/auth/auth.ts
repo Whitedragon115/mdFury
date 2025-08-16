@@ -31,17 +31,17 @@ export interface User {
   backgroundOpacity?: number
 }
 
-export interface LoginCredentials {
-  username: string
-  password: string
-}
-
 export interface RegisterCredentials {
   username: string
   email: string
   password: string
   confirmPassword: string
   displayName?: string
+}
+
+export interface LoginCredentials {
+  username: string
+  password: string
 }
 
 export interface AuthResponse {
@@ -75,34 +75,34 @@ export class AuthService {
       const decoded = JSON.parse(atob(token))
       // Check if token is not older than 24 hours
       const isValid = (Date.now() - decoded.timestamp) < (24 * 60 * 60 * 1000)
-      
+
       if (!isValid) {
         return null
       }
-      
+
       // Get fresh user data from database
       const user = await prisma.user.findUnique({
         where: { id: decoded.id }
       })
-      
+
       if (!user) {
         return null
       }
-      
+
       return {
         id: user.id,
-        username: user.username,
-        email: user.email,
-        displayName: user.displayName || user.username,
+        username: user.username || '',
+        email: user.email || '',
+        displayName: user.displayName || user.username || '',
         profileImage: user.profileImage || '',
-        language: user.language,
-        theme: user.theme as 'light' | 'dark' | 'system',
+        language: user.language || 'en',
+        theme: (user.theme as 'light' | 'dark' | 'system') || 'system',
         backgroundImage: user.backgroundImage || '',
-        backgroundBlur: user.backgroundBlur,
-        backgroundBrightness: user.backgroundBrightness,
-        backgroundOpacity: user.backgroundOpacity
+        backgroundBlur: user.backgroundBlur || 0,
+        backgroundBrightness: user.backgroundBrightness || 100,
+        backgroundOpacity: user.backgroundOpacity || 100
       }
-    } catch (error) {
+    } catch (_error) {
       return null
     }
   }
@@ -112,7 +112,7 @@ export class AuthService {
       const user = await prisma.user.findUnique({
         where: { username: credentials.username }
       })
-      
+
       if (!user) {
         return {
           success: false,
@@ -120,9 +120,16 @@ export class AuthService {
         }
       }
 
+      if (!user.password) {
+        return {
+          success: false,
+          message: 'Invalid password'
+        }
+      }
+
       // Verify password
       const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
-      
+
       if (!isPasswordValid) {
         return {
           success: false,
@@ -138,16 +145,16 @@ export class AuthService {
 
       const userWithoutPassword: User = {
         id: user.id,
-        username: user.username,
-        email: user.email,
-        displayName: user.displayName || user.username,
+        username: user.username || '',
+        email: user.email || '',
+        displayName: user.displayName || user.username || '',
         profileImage: user.profileImage || '',
-        language: user.language,
-        theme: user.theme as 'light' | 'dark' | 'system',
+        language: user.language || 'en',
+        theme: (user.theme as 'light' | 'dark' | 'system') || 'system',
         backgroundImage: user.backgroundImage || '',
-        backgroundBlur: user.backgroundBlur,
-        backgroundBrightness: user.backgroundBrightness,
-        backgroundOpacity: user.backgroundOpacity
+        backgroundBlur: user.backgroundBlur || 0,
+        backgroundBrightness: user.backgroundBrightness || 100,
+        backgroundOpacity: user.backgroundOpacity || 100
       }
 
       const token = this.generateToken(userWithoutPassword)
@@ -157,7 +164,7 @@ export class AuthService {
         user: userWithoutPassword,
         token
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         success: false,
         message: 'Login failed'
@@ -168,13 +175,6 @@ export class AuthService {
   static async register(credentials: RegisterCredentials): Promise<AuthResponse> {
     try {
       // Validate input
-      if (!credentials.username || !credentials.email || !credentials.password) {
-        return {
-          success: false,
-          message: 'Username, email, and password are required'
-        }
-      }
-
       if (credentials.password !== credentials.confirmPassword) {
         return {
           success: false,
@@ -185,16 +185,16 @@ export class AuthService {
       if (credentials.password.length < 6) {
         return {
           success: false,
-          message: 'Password must be at least 6 characters long'
+          message: 'Password must be at least 6 characters'
         }
       }
 
       // Check if username already exists
-      const existingUserByUsername = await prisma.user.findUnique({
+      const existingUser = await prisma.user.findUnique({
         where: { username: credentials.username }
       })
 
-      if (existingUserByUsername) {
+      if (existingUser) {
         return {
           success: false,
           message: 'Username already exists'
@@ -202,11 +202,11 @@ export class AuthService {
       }
 
       // Check if email already exists
-      const existingUserByEmail = await prisma.user.findUnique({
+      const existingEmail = await prisma.user.findUnique({
         where: { email: credentials.email }
       })
 
-      if (existingUserByEmail) {
+      if (existingEmail) {
         return {
           success: false,
           message: 'Email already exists'
@@ -214,7 +214,7 @@ export class AuthService {
       }
 
       // Hash password
-      const hashedPassword = await bcrypt.hash(credentials.password, 12)
+      const hashedPassword = await bcrypt.hash(credentials.password, 10)
 
       // Create user
       const newUser = await prisma.user.create({
@@ -224,37 +224,41 @@ export class AuthService {
           password: hashedPassword,
           displayName: credentials.displayName || credentials.username,
           language: 'en',
-          theme: 'dark'
+          theme: 'dark',
+          backgroundBlur: 0,
+          backgroundBrightness: 70,
+          backgroundOpacity: 0.1,
+          createdAt: new Date(),
+          lastLogin: new Date()
         }
       })
 
-      const userWithoutPassword: User = {
+      const userResponse: User = {
         id: newUser.id,
-        username: newUser.username,
-        email: newUser.email,
-        displayName: newUser.displayName ?? newUser.username,
-        profileImage: newUser.profileImage ?? '',
-        language: newUser.language,
-        theme: newUser.theme as 'light' | 'dark' | 'system',
-        backgroundImage: newUser.backgroundImage ?? '',
-        backgroundBlur: newUser.backgroundBlur,
-        backgroundBrightness: newUser.backgroundBrightness,
-        backgroundOpacity: newUser.backgroundOpacity
+        username: newUser.username || '',
+        email: newUser.email || '',
+        displayName: newUser.displayName || newUser.username || '',
+        profileImage: newUser.profileImage || '',
+        language: newUser.language || 'en',
+        theme: (newUser.theme as 'light' | 'dark' | 'system') || 'dark',
+        backgroundImage: newUser.backgroundImage || '',
+        backgroundBlur: newUser.backgroundBlur || 0,
+        backgroundBrightness: newUser.backgroundBrightness || 70,
+        backgroundOpacity: newUser.backgroundOpacity || 0.1
       }
 
-      const token = this.generateToken(userWithoutPassword)
+      const token = this.generateToken(userResponse)
 
       return {
         success: true,
-        user: userWithoutPassword,
-        token,
-        message: 'Registration successful'
+        user: userResponse,
+        token
       }
     } catch (error) {
-      console.error('Registration error:', error)
+      console.error('Registration failed:', error)
       return {
         success: false,
-        message: 'Registration failed. Please try again.'
+        message: 'Registration failed'
       }
     }
   }
@@ -275,16 +279,16 @@ export class AuthService {
 
       const userResponse: User = {
         id: updatedUser.id,
-        username: updatedUser.username,
-        email: updatedUser.email,
-        displayName: updatedUser.displayName || updatedUser.username,
+        username: updatedUser.username || '',
+        email: updatedUser.email || '',
+        displayName: updatedUser.displayName || updatedUser.username || '',
         profileImage: updatedUser.profileImage || '',
-        language: updatedUser.language,
-        theme: updatedUser.theme as 'light' | 'dark' | 'system',
+        language: updatedUser.language || 'en',
+        theme: (updatedUser.theme as 'light' | 'dark' | 'system') || 'system',
         backgroundImage: updatedUser.backgroundImage || '',
-        backgroundBlur: updatedUser.backgroundBlur,
-        backgroundBrightness: updatedUser.backgroundBrightness,
-        backgroundOpacity: updatedUser.backgroundOpacity
+        backgroundBlur: updatedUser.backgroundBlur || 0,
+        backgroundBrightness: updatedUser.backgroundBrightness || 100,
+        backgroundOpacity: updatedUser.backgroundOpacity || 100
       }
 
       // Generate new token with updated user data
@@ -295,7 +299,7 @@ export class AuthService {
         user: userResponse,
         token: newToken
       }
-    } catch (error) {
+    } catch (_error) {
       return {
         success: false,
         message: 'Failed to update profile'
@@ -306,22 +310,22 @@ export class AuthService {
   static async getAllUsers(): Promise<UserProfile[]> {
     try {
       const users = await prisma.user.findMany()
-      
+
       return users.map(user => ({
         id: user.id,
-        username: user.username,
-        email: user.email,
-        displayName: user.displayName || user.username,
+        username: user.username || '',
+        email: user.email || '',
+        displayName: user.displayName || user.username || '',
         profileImage: user.profileImage || '',
-        language: user.language,
-        theme: user.theme as 'light' | 'dark' | 'system',
+        language: user.language || 'en',
+        theme: (user.theme as 'light' | 'dark' | 'system') || 'system',
         backgroundImage: user.backgroundImage || '',
-        backgroundBlur: user.backgroundBlur,
-        backgroundBrightness: user.backgroundBrightness,
+        backgroundBlur: user.backgroundBlur || 0,
+        backgroundBrightness: user.backgroundBrightness || 100,
         createdAt: user.createdAt.toISOString(),
         lastLogin: user.lastLogin.toISOString()
       }))
-    } catch (error) {
+    } catch (_error) {
       return []
     }
   }
@@ -338,16 +342,16 @@ export class AuthService {
 
       return {
         id: user.id,
-        username: user.username,
-        email: user.email,
-        displayName: user.displayName || user.username,
+        username: user.username || '',
+        email: user.email || '',
+        displayName: user.displayName || user.username || '',
         profileImage: user.profileImage || '',
-        language: user.language,
-        theme: user.theme as 'light' | 'dark' | 'system',
+        language: user.language || 'en',
+        theme: (user.theme as 'light' | 'dark' | 'system') || 'system',
         backgroundImage: user.backgroundImage || '',
-        backgroundBlur: user.backgroundBlur,
-        backgroundBrightness: user.backgroundBrightness,
-        backgroundOpacity: user.backgroundOpacity
+        backgroundBlur: user.backgroundBlur || 0,
+        backgroundBrightness: user.backgroundBrightness || 100,
+        backgroundOpacity: user.backgroundOpacity || 100
       }
     } catch (error) {
       console.error('Failed to get user by ID:', error)

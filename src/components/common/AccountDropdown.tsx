@@ -4,10 +4,11 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from 'next-themes'
-import { useAuth } from '@/contexts/AuthContext'
+import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
 import { ClientAuthService } from '@/lib/auth/client-auth'
 import { Button } from '@/components/ui/button'
 import SettingsPanel from './SettingsPanel'
+import Image from 'next/image'
 import { 
   User, 
   ChevronDown, 
@@ -22,7 +23,7 @@ import {
 
 export function AccountDropdown() {
   const { t } = useTranslation()
-  const { user, logout, updateUser } = useAuth()
+  const { user, logout, updateUser } = useIntegratedAuth()
   const { theme } = useTheme()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
@@ -83,9 +84,11 @@ export function AccountDropdown() {
         className="h-10 flex items-center gap-2 hover:bg-slate-100/30 dark:hover:bg-slate-800/50 border border-slate-200 dark:border-slate-700 bg-white/20 dark:bg-slate-900/40 backdrop-blur-sm shadow-sm hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-inset"
       >
         {user.profileImage ? (
-          <img 
-            src={user.profileImage} 
-            alt={user.displayName}
+          <Image
+            src={user.profileImage}
+            alt={user.displayName || 'User'}
+            width={24}
+            height={24}
             className="w-6 h-6 rounded-full object-cover"
           />
         ) : (

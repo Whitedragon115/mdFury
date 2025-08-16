@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useAuth } from '@/contexts/AuthContext'
+import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
 import { LanguageSwitcher } from '@/components/common'
 import { UserPlus, Eye, EyeOff, Loader2, User, Mail, Lock, FileText } from 'lucide-react'
 import OAuthButtons from './OAuthButtons'
@@ -24,7 +24,7 @@ export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { register } = useAuth()
+  const { register } = useIntegratedAuth()
 
   // Force dark theme for register page
   useEffect(() => {
@@ -70,7 +70,7 @@ export default function RegisterForm() {
         // Redirect to main editor page after successful registration
         window.location.href = '/'
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error(t('auth.registerError'))
     } finally {
       setIsSubmitting(false)

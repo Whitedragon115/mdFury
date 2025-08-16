@@ -3,9 +3,26 @@ import GoogleProvider from 'next-auth/providers/google'
 import GitHubProvider from 'next-auth/providers/github'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
-import { prisma } from '../database'
+import { prisma } from '../prisma'
 import { AuthService } from './auth'
-import bcrypt from 'bcryptjs'
+
+// Helper types to avoid explicit `any`
+interface NextAuthUser {
+  id?: string
+  username?: string
+  name?: string | null
+  email?: string | null
+  image?: string | null
+  displayName?: string | null
+  language?: string | null
+  theme?: 'light' | 'dark' | 'system' | null
+  backgroundImage?: string | null
+  backgroundBlur?: number | null
+  backgroundBrightness?: number | null
+  backgroundOpacity?: number | null
+}
+
+type Tokenish = Record<string, unknown>
 
 export const authConfig: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -21,16 +38,19 @@ export const authConfig: NextAuthOptions = {
         }
       }
     }),
+
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
     }),
+
     CredentialsProvider({
       name: 'credentials',
       credentials: {
         username: { label: 'Username', type: 'text' },
         password: { label: 'Password', type: 'password' }
       },
+
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) {
           return null
@@ -70,101 +90,38 @@ export const authConfig: NextAuthOptions = {
     strategy: 'jwt'
   },
   callbacks: {
-    async signIn({ user, account, profile }) {
-      // Handle OAuth sign-in (Google, GitHub)
+    async signIn({ user, account }) {
+      // For OAuth providers
       if (account?.provider === 'google' || account?.provider === 'github') {
-        try {
-          // Check if OAuth registration is disabled
-          if (process.env.DISABLE_OAUTH_REGISTRATION === 'true') {
-            // Check if user already exists
-            const existingUser = await prisma.user.findUnique({
-              where: { email: user.email! }
-            })
-            
-            if (!existingUser) {
-              console.log('OAuth registration is disabled and user does not exist')
-              return false // Deny sign-in for new users
-            }
-          }
-
-          // Check if user exists in our database
-          let existingUser = await prisma.user.findUnique({
+        // Check if OAuth registration is disabled
+        if (process.env.DISABLE_OAUTH_REGISTRATION === 'true') {
+          const existingUser = await prisma.user.findUnique({
             where: { email: user.email! }
           })
-
+          
           if (!existingUser) {
-            // Auto-register user if OAuth registration is enabled
-            if (process.env.DISABLE_OAUTH_REGISTRATION !== 'true') {
-              // Generate a unique username from email or name
-              let username = user.email!.split('@')[0]
-              let displayName = user.name || username
-              
-              // Ensure username is unique
-              let usernameExists = await prisma.user.findUnique({
-                where: { username }
-              })
-              
-              let counter = 1
-              while (usernameExists) {
-                username = `${user.email!.split('@')[0]}${counter}`
-                usernameExists = await prisma.user.findUnique({
-                  where: { username }
-                })
-                counter++
-              }
-
-              // Create new user with OAuth data
-              existingUser = await prisma.user.create({
-                data: {
-                  username,
-                  email: user.email!,
-                  password: await bcrypt.hash(Math.random().toString(36), 12), // Random password
-                  displayName,
-                  profileImage: user.image || '',
-                  language: 'en',
-                  theme: 'dark'
-                }
-              })
-
-              console.log(`Auto-registered new user via ${account.provider}:`, existingUser.username)
-            } else {
-              return false // Deny sign-in if registration is disabled
-            }
+            console.log('OAuth registration is disabled and user does not exist')
+            return false
           }
-
-          // Update user info with latest OAuth data if needed
-          if (existingUser && (existingUser.profileImage !== user.image || existingUser.displayName !== user.name)) {
-            await prisma.user.update({
-              where: { id: existingUser.id },
-              data: {
-                profileImage: user.image || existingUser.profileImage,
-                displayName: user.name || existingUser.displayName,
-                lastLogin: new Date()
-              }
-            })
-          }
-
-          return true
-        } catch (error) {
-          console.error('OAuth sign-in error:', error)
-          return false
         }
+        return true
       }
-
-      return true // Allow credentials sign-in
+      
+      // For credentials provider
+      return true
     },
-    async jwt({ token, user, account }) {
-      // Handle OAuth users
-      if (account?.provider === 'google' || account?.provider === 'github') {
-        // Fetch user data from database for OAuth users
+    
+    async jwt({ token, user, account, trigger }) {
+      // If this is a session update trigger, refresh data from database
+      if (trigger === 'update' && token.email) {
         const dbUser = await prisma.user.findUnique({
-          where: { email: user.email! }
+          where: { email: token.email as string }
         })
-
+        
         if (dbUser) {
           token.id = dbUser.id
           token.username = dbUser.username
-          token.displayName = dbUser.displayName
+          token.displayName = dbUser.displayName || dbUser.name
           token.language = dbUser.language
           token.theme = dbUser.theme
           token.backgroundImage = dbUser.backgroundImage
@@ -172,43 +129,91 @@ export const authConfig: NextAuthOptions = {
           token.backgroundBrightness = dbUser.backgroundBrightness
           token.backgroundOpacity = dbUser.backgroundOpacity
         }
-      } else if (user) {
-        // Handle credentials users
-        token.id = user.id
-        token.username = (user as any).username
-        token.displayName = (user as any).displayName
-        token.language = (user as any).language || 'en'
-        token.theme = (user as any).theme || 'dark'
-        token.backgroundImage = (user as any).backgroundImage
-        token.backgroundBlur = (user as any).backgroundBlur || 0
-        token.backgroundBrightness = (user as any).backgroundBrightness || 70
-        token.backgroundOpacity = (user as any).backgroundOpacity || 0.1
+        return token
       }
 
-      // Always set default theme to dark if not present
-      if (!token.theme) {
-        token.theme = 'dark'
+      // If this is the first time JWT is created (when user signs in)
+      if (user) {
+        if (account?.provider === 'google' || account?.provider === 'github') {
+          // For OAuth users, get fresh data from database and sync fields
+          const dbUser = await prisma.user.findUnique({
+            where: { email: user.email! }
+          })
+          
+          if (dbUser) {
+            // Sync NextAuth fields with our custom fields if they exist
+            let needsUpdate = false
+            const updateData: Partial<{ displayName: string; profileImage: string }> = {}
+            
+            // Sync name -> displayName
+            if (dbUser.name && (!dbUser.displayName || dbUser.displayName !== dbUser.name)) {
+              updateData.displayName = dbUser.name
+              needsUpdate = true
+            }
+            
+            // Sync image -> profileImage
+            if (dbUser.image && (!dbUser.profileImage || dbUser.profileImage !== dbUser.image)) {
+              updateData.profileImage = dbUser.image
+              needsUpdate = true
+            }
+            
+            // Update user if needed
+            if (needsUpdate) {
+              await prisma.user.update({
+                where: { id: dbUser.id },
+                data: updateData
+              })
+            }
+            
+            token.id = dbUser.id
+            token.username = dbUser.username
+            token.displayName = dbUser.displayName || dbUser.name
+            token.language = dbUser.language
+            token.theme = dbUser.theme
+            token.backgroundImage = dbUser.backgroundImage
+            token.backgroundBlur = dbUser.backgroundBlur
+            token.backgroundBrightness = dbUser.backgroundBrightness
+            token.backgroundOpacity = dbUser.backgroundOpacity
+          }
+        } else {
+          // For credentials users
+          const pUser = user as NextAuthUser
+          const t = token as Tokenish
+          t.id = pUser.id
+          t.username = pUser.username
+          t.displayName = pUser.displayName
+          t.language = pUser.language || 'en'
+          t.theme = pUser.theme || 'dark'
+          t.backgroundImage = pUser.backgroundImage
+          t.backgroundBlur = pUser.backgroundBlur ?? 0
+          t.backgroundBrightness = pUser.backgroundBrightness ?? 70
+          t.backgroundOpacity = pUser.backgroundOpacity ?? 0.1
+        }
       }
 
       return token
     },
+    
     async session({ session, token }) {
       if (token && session.user) {
-        (session.user as any).id = token.id as string
-        ;(session.user as any).username = token.username
-        ;(session.user as any).displayName = token.displayName
-        ;(session.user as any).language = token.language
-        ;(session.user as any).theme = token.theme
-        ;(session.user as any).backgroundImage = token.backgroundImage
-        ;(session.user as any).backgroundBlur = token.backgroundBlur
-        ;(session.user as any).backgroundBrightness = token.backgroundBrightness
-        ;(session.user as any).backgroundOpacity = token.backgroundOpacity
+        const t = token as Tokenish
+        const sUser = session.user as NextAuthUser
+        sUser.id = t.id as string | undefined
+        sUser.username = t.username as string | undefined
+        sUser.displayName = t.displayName as string | undefined
+        sUser.language = (t.language as string) || undefined
+        sUser.theme = (t.theme as 'light' | 'dark' | 'system') || undefined
+        sUser.backgroundImage = t.backgroundImage as string | undefined
+        sUser.backgroundBlur = (t.backgroundBlur as number) ?? undefined
+        sUser.backgroundBrightness = (t.backgroundBrightness as number) ?? undefined
+        sUser.backgroundOpacity = (t.backgroundOpacity as number) ?? undefined
       }
       return session
     }
   },
   pages: {
-    signIn: '/login'
+    signIn: '/login',
+    error: '/auth/error' // Custom error page
   },
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development'

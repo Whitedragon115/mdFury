@@ -24,11 +24,11 @@ interface BinControlsProps {
   hasPassword: boolean
   password: string
   isLoading: boolean
-  onTitleChange: (title: string) => void
-  onBinIdChange?: (binId: string) => void // 變成可選
-  onTagsChange: (tags: string[]) => void
-  onPublicChange: (isPublic: boolean) => void
-  onPasswordChange: (password: string) => void
+  onTitleChange: (_title: string) => void
+  onBinIdChange?: (_binId: string) => void // 變成可選
+  onTagsChange: (_tags: string[]) => void
+  onPublicChange: (_isPublic: boolean) => void
+  onPasswordChange: (_password: string) => void
   onSave: () => void
   onGenerateId?: () => void // 變成可選
   disabledBinId?: boolean // 新增

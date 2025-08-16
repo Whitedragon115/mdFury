@@ -20,25 +20,31 @@ export default function BackgroundLayer({
   const [imageLoaded, setImageLoaded] = useState(false)
 
   useEffect(() => {
-    console.log('BackgroundLayer props:', { backgroundImage, backgroundBlur, backgroundBrightness, backgroundOpacity })
-    
+    // Only react to backgroundImage changes here. Other props are used
+    // during render and don't need to be in this effect's dependency list.
     if (backgroundImage) {
       // Test if image can be loaded
       const img = new Image()
+      let mounted = true
       img.onload = () => {
-        console.log('Background image loaded successfully:', backgroundImage)
+        if (!mounted) return
         setImageLoaded(true)
         setCurrentImage(backgroundImage)
         setIsVisible(true)
       }
       img.onerror = () => {
-        console.error('Failed to load background image:', backgroundImage)
+        if (!mounted) return
         setImageLoaded(false)
         setIsVisible(false)
       }
       img.src = backgroundImage
+      return () => {
+        // cleanup handlers and ensure we don't update state after unmount
+        mounted = false
+        img.onload = null
+        img.onerror = null
+      }
     } else {
-      console.log('No background image provided')
       setIsVisible(false)
       setImageLoaded(false)
       // Delay removing the image to allow fade out animation

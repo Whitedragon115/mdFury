@@ -1,16 +1,16 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { User, LoginCredentials, RegisterCredentials, AuthResponse, ClientAuthService } from '@/lib/auth/client-auth'
 
 interface AuthContextType {
   user: User | null
   isLoading: boolean
-  login: (credentials: LoginCredentials) => Promise<AuthResponse>
-  register: (credentials: RegisterCredentials) => Promise<AuthResponse>
+  login: (_credentials: LoginCredentials) => Promise<AuthResponse>
+  register: (_credentials: RegisterCredentials) => Promise<AuthResponse>
   logout: () => void
   isAuthenticated: boolean
-  updateUser: (user: User) => void
+  updateUser: (_user: User) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkExistingAuth()
   }, [])
 
-  const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
+  const login = useCallback(async (credentials: LoginCredentials): Promise<AuthResponse> => {
     try {
       const response = await ClientAuthService.login(credentials)
       
@@ -53,15 +53,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       return response
-    } catch (error) {
+    } catch (_error) {
       return {
         success: false,
         message: 'Login failed'
       }
     }
-  }
+  }, [])
 
-  const register = async (credentials: RegisterCredentials): Promise<AuthResponse> => {
+  const register = useCallback(async (credentials: RegisterCredentials): Promise<AuthResponse> => {
     try {
       const response = await ClientAuthService.register(credentials)
       
@@ -71,26 +71,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       return response
-    } catch (error) {
+    } catch (_error) {
       return {
         success: false,
         message: 'Registration failed'
       }
     }
-  }
+  }, [])
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null)
     localStorage.removeItem('auth_token')
-  }
+  }, [])
 
-  const updateUser = async (updatedUser: User) => {
+  const updateUser = useCallback(async (updatedUser: User) => {
     try {
       const token = localStorage.getItem('auth_token')
+      
+      // For OAuth users, we don't have a token, so just update local state
       if (!token) {
-        throw new Error('No auth token')
+        console.log('No auth token found, updating local state only (OAuth user)')
+        setUser(updatedUser)
+        return
       }
 
+      // For traditional login users, update via API
       const response = await ClientAuthService.updateProfile(updatedUser)
       
       if (response.success && response.user && response.token) {
@@ -99,8 +104,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Failed to update user:', error)
+      // Still update local state even if API call fails
+      setUser(updatedUser)
     }
-  }
+  }, [])
 
   const isAuthenticated = !!user
 

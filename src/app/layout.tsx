@@ -4,6 +4,7 @@ import "./globals.css";
 import { CustomToaster } from "@/components/common";
 import { Footer } from "@/components/layout";
 import { ThemeProvider, NextAuthProvider } from "@/components/providers";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 
 
@@ -25,19 +26,21 @@ export default function RootLayout({
         className={"antialiased min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col"}
       >
         <NextAuthProvider>
-          <ThemeProvider 
-            defaultTheme="dark" 
-            enableSystem={true}
-            disableTransitionOnChange={false}
-          >
-            <I18nProvider>
-              <div className="flex-1">
-                {children}
-              </div>
-              <Footer />
-            </I18nProvider>
-            <CustomToaster />
-          </ThemeProvider>
+          <AuthProvider>
+            <ThemeProvider 
+              defaultTheme="dark" 
+              enableSystem={true}
+              disableTransitionOnChange={false}
+            >
+              <I18nProvider>
+                <div className="flex-1">
+                  {children}
+                </div>
+                <Footer />
+              </I18nProvider>
+              <CustomToaster />
+            </ThemeProvider>
+          </AuthProvider>
         </NextAuthProvider>
       </body>
     </html>

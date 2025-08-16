@@ -1,6 +1,6 @@
 'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
+import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
 import { AccountDropdown } from '@/components/common'
 import { LanguageSwitcher } from '@/components/common'
 import { useTranslation } from 'react-i18next'
@@ -12,7 +12,7 @@ interface PageLayoutProps {
 }
 
 export function PageLayout({ children, showHeader = true }: PageLayoutProps) {
-  const { user } = useAuth()
+  const { user } = useIntegratedAuth()
   const { t } = useTranslation()
 
   return (

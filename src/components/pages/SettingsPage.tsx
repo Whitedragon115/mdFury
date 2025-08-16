@@ -1,23 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from 'next-themes'
 import toast from 'react-hot-toast'
-import { useAuth } from '@/contexts/AuthContext'
+import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
 import { PageLayout } from '@/components/layout'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { AuthService } from '@/lib/auth/index'
 import { Settings, User, Save, Loader2, ArrowLeft } from 'lucide-react'
 import { LoginForm } from '@/components/forms'
 
 export default function SettingsPage() {
   const { t, i18n } = useTranslation()
-  const { user, updateUser } = useAuth()
+  const { user, updateUser } = useIntegratedAuth()
   const { theme, setTheme } = useTheme()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
@@ -28,6 +28,7 @@ export default function SettingsPage() {
     language: 'en',
     theme: 'dark' as 'light' | 'dark' | 'system'
   })
+  const [imageVisible, setImageVisible] = useState(true)
 
   useEffect(() => {
     if (user) {
@@ -46,6 +47,11 @@ export default function SettingsPage() {
     }
   }, [user, theme])
 
+  // Reset image visibility when profile image URL changes
+  useEffect(() => {
+    setImageVisible(true)
+  }, [formData.profileImage])
+
   // If user is not authenticated, show login form with forced dark theme
   if (!user) {
     return (
@@ -60,32 +66,28 @@ export default function SettingsPage() {
 
     setIsLoading(true)
     try {
-      const result = await AuthService.updateUserProfile(user.id, {
+      // Update language if changed
+      if (formData.language !== user.language) {
+        i18n.changeLanguage(formData.language)
+      }
+
+      // Update theme if changed
+      if (formData.theme !== theme) {
+        setTheme(formData.theme)
+      }
+
+      // Use the integrated updateUser function which handles both OAuth and credential users
+      await updateUser({
+        ...user,
         displayName: formData.displayName,
         profileImage: formData.profileImage,
         language: formData.language,
         theme: formData.theme
       })
 
-      if (result.success && result.user) {
-        // Update language if changed
-        if (formData.language !== user.language) {
-          i18n.changeLanguage(formData.language)
-        }
-
-        // Only allow theme changes for logged in users
-        if (formData.theme !== theme) {
-          setTheme(formData.theme)
-        }
-
-        // Re-login to update the user context
-        updateUser(result.user)
-        
-        toast.success(t('settings.notifications.saved'))
-      } else {
-        toast.error(result.message || t('settings.notifications.error'))
-      }
+      toast.success(t('settings.notifications.saved'))
     } catch (error) {
+      console.error('Failed to save settings:', error)
       toast.error(t('settings.notifications.error'))
     } finally {
       setIsLoading(false)
@@ -165,16 +167,15 @@ export default function SettingsPage() {
                 className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-600 transition-colors focus:ring-2 focus:ring-blue-500/20"
                 disabled={isLoading}
               />
-              {formData.profileImage && (
+              {formData.profileImage && imageVisible && (
                 <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded animate-scale-in">
-                  <img 
-                    src={formData.profileImage} 
-                    alt="Preview" 
+                  <Image
+                    src={formData.profileImage}
+                    alt="Preview"
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full object-cover hover-scale transition-transform"
-                    onError={(e) => {
-                      e.currentTarget.src = ''
-                      e.currentTarget.style.display = 'none'
-                    }}
+                    onError={() => setImageVisible(false)}
                   />
                   <span className="text-sm text-slate-600 dark:text-slate-400">Preview</span>
                 </div>

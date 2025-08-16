@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams, usePathname } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
@@ -14,8 +14,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { AccountDropdown } from '@/components/common'
 import { LanguageSwitcher } from '@/components/common'
 import { BinControls } from '@/components/forms'
-import { ClientMarkdownService, SavedMarkdown } from '@/lib/api'
-import { useAuth } from '@/contexts/AuthContext'
+import { IntegratedMarkdownService } from '@/lib/api'
+import { SavedMarkdown } from '@/types'
+import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
 import { 
   FileText, 
   Eye, 
@@ -24,7 +25,6 @@ import {
   Split,
   Maximize2,
   LogIn,
-  Save,
   Share2
 } from 'lucide-react'
 
@@ -76,8 +76,11 @@ You can add math expressions like \`E = mc²\`
 `
 
 export default function MarkdownPreviewer({ initialDocument }: { initialDocument?: SavedMarkdown | null }) {
+
+  
   const { t } = useTranslation()
-  const { user, logout } = useAuth()
+  //WARN
+  const { user } = useIntegratedAuth()
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const documentId = searchParams.get('doc')
@@ -91,12 +94,12 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
   const [viewMode, setViewMode] = useState<'split' | 'edit' | 'preview'>('split')
   const [isClient, setIsClient] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
-  const [isSaved, setIsSaved] = useState(false)
+  const [_isSaved, setIsSaved] = useState(false)
   const isAuthenticated = !!user
 
   // Generate random bin ID
   const generateBinId = () => {
-    return ClientMarkdownService.generateId()
+    return IntegratedMarkdownService.generateBinId()
   }
 
   // Set generated bin ID to state
@@ -110,6 +113,28 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
   }, [])
 
   // Load document if documentId is provided or if initialDocument is passed
+  const loadDocument = useCallback(async (docId: string) => {
+    if (!user) return
+    try {
+      const markdowns = await IntegratedMarkdownService.getUserMarkdowns()
+      const doc = markdowns.find((m: SavedMarkdown) => m.id === docId)
+
+      if (doc) {
+        setMarkdown(doc.content)
+        setCurrentDocId(doc.id)
+        setCurrentDocTitle(doc.title)
+        setCurrentBinId(doc.binId || doc.id)
+        setCurrentTags(doc.tags || [])
+        setIsPublic(doc.isPublic || false)
+        setBinPassword(doc.password ? '••••••••' : '')
+      } else {
+        toast.error('Document not found')
+      }
+    } catch (_error) {
+      toast.error('Failed to load document')
+    }
+  }, [user])
+
   useEffect(() => {
     if (initialDocument) {
       // Load from initialDocument prop (for edit page)
@@ -134,38 +159,13 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
       setBinPassword('')
       // Don't generate bin ID until save
     }
-  }, [documentId, user, initialDocument])
+  }, [documentId, user, initialDocument, loadDocument])
 
   useEffect(() => {
     setIsSaved(false)
   }, [currentDocTitle, currentBinId, currentTags, isPublic, binPassword, markdown])
 
-  const loadDocument = async (docId: string) => {
-    if (!user) return
-    
-    try {
-      // Note: This needs to be adjusted since we don't have getMarkdownById in client service
-      // For now, we'll get all user markdowns and find the one we need
-      const markdowns = await ClientMarkdownService.getUserMarkdowns()
-      const doc = markdowns.find(m => m.id === docId)
-      
-      if (doc) {
-        setMarkdown(doc.content)
-        setCurrentDocId(doc.id)
-        setCurrentDocTitle(doc.title)
-        setCurrentBinId(doc.binId || doc.id) // Use binId if available, fallback to id
-        setCurrentTags(doc.tags || [])
-        setIsPublic(doc.isPublic || false)
-        // Show placeholder for password if document has one, but don't show actual password
-        setBinPassword(doc.password ? '••••••••' : '')
-      } else {
-        toast.error('Document not found')
-        // Could redirect or show error
-      }
-    } catch (error) {
-      toast.error('Failed to load document')
-    }
-  }
+  // ...loadDocument moved above and wrapped in useCallback
 
   const copyToClipboard = async () => {
     try {
@@ -201,7 +201,7 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
     try {
       await navigator.clipboard.writeText(previewUrl)
       toast.success('Preview link copied to clipboard!')
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to copy share link')
     }
   }
@@ -225,7 +225,7 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
     }
 
     // Validate binId format
-    const validation = ClientMarkdownService.validateBinId(binId)
+    const validation = IntegratedMarkdownService.validateBinId(binId)
     if (!validation.valid) {
       toast.error(validation.message || 'Invalid bin ID format')
       return
@@ -253,7 +253,7 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
 
       if (currentDocId) {
         // Update existing document
-        const result = await ClientMarkdownService.updateMarkdown(currentDocId, saveData)
+        const result = await IntegratedMarkdownService.updateMarkdown(currentDocId, saveData)
         
         if (result.success) {
           setIsSaved(true)
@@ -271,7 +271,7 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
           try {
             await navigator.clipboard.writeText(previewUrl)
             toast.success(t('editor.notifications.updated'))
-          } catch (err) {
+          } catch (_err) {
             toast.success(t('editor.notifications.updated'))
           }
         } else {
@@ -279,7 +279,7 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
         }
       } else {
         // Create new document
-        const result = await ClientMarkdownService.saveMarkdown(saveData)
+        const result = await IntegratedMarkdownService.saveMarkdown(saveData)
         
         if (result.success && result.markdown) {
           setCurrentDocId(result.markdown.id)
@@ -292,14 +292,14 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
           try {
             await navigator.clipboard.writeText(previewUrl)
             toast.success(t('editor.notifications.saved'))
-          } catch (err) {
+          } catch (_err) {
             toast.success(t('editor.notifications.saved'))
           }
         } else {
           toast.error(result.message || 'Failed to save document')
         }
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to save document')
     } finally {
       setIsSaving(false)

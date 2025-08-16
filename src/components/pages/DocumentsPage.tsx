@@ -4,12 +4,13 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
-import { useAuth } from '@/contexts/AuthContext'
+import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
 import { PageLayout } from '@/components/layout'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ClientMarkdownService, SavedMarkdown } from '@/lib/api'
+import { IntegratedMarkdownService } from '@/lib/api'
+import { SavedMarkdown } from '@/types'
 import { 
   FolderOpen, 
   Search, 
@@ -28,7 +29,7 @@ import { LoginForm } from '@/components/forms'
 
 export default function DocumentsPage() {
   const { t } = useTranslation()
-  const { user } = useAuth()
+  const { user } = useIntegratedAuth()
   const router = useRouter()
   const [documents, setDocuments] = useState<SavedMarkdown[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -40,9 +41,9 @@ export default function DocumentsPage() {
     
     setIsLoading(true)
     try {
-      const userDocs = await ClientMarkdownService.getUserMarkdowns()
+      const userDocs = await IntegratedMarkdownService.getUserMarkdowns()
       setDocuments(userDocs)
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to load documents')
     } finally {
       setIsLoading(false)
@@ -54,9 +55,9 @@ export default function DocumentsPage() {
       const loadUserDocuments = async () => {
         setIsLoading(true)
         try {
-          const userDocs = await ClientMarkdownService.getUserMarkdowns()
+          const userDocs = await IntegratedMarkdownService.getUserMarkdowns()
           setDocuments(userDocs)
-        } catch (error) {
+        } catch (_error) {
           toast.error('Failed to load documents')
         } finally {
           setIsLoading(false)
@@ -79,14 +80,14 @@ export default function DocumentsPage() {
     try {
       // For now, get all documents and filter client-side
       // TODO: Add search API endpoint
-      const allDocs = await ClientMarkdownService.getUserMarkdowns()
-      const results = allDocs.filter(doc => 
+      const allDocs = await IntegratedMarkdownService.getUserMarkdowns()
+      const results = allDocs.filter((doc: SavedMarkdown) => 
         doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         doc.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doc.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+        doc.tags.some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
       )
       setDocuments(results)
-    } catch (error) {
+    } catch (_error) {
       toast.error('Search failed')
     } finally {
       setIsLoading(false)
@@ -102,14 +103,14 @@ export default function DocumentsPage() {
     if (!user) return
 
     try {
-      const result = await ClientMarkdownService.deleteMarkdown(docId)
+      const result = await IntegratedMarkdownService.deleteMarkdown(docId)
       if (result.success) {
         toast.success('Document deleted successfully')
         loadDocuments()
       } else {
         toast.error(result.message || 'Failed to delete document')
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to delete document')
     } finally {
       setDeleteDialogOpen(null)
@@ -120,7 +121,7 @@ export default function DocumentsPage() {
     if (!user) return
 
     try {
-      const result = await ClientMarkdownService.saveMarkdown({
+      const result = await IntegratedMarkdownService.saveMarkdown({
         title: `${doc.title} (Copy)`,
         content: doc.content,
         tags: doc.tags,
@@ -133,13 +134,16 @@ export default function DocumentsPage() {
       } else {
         toast.error('Failed to duplicate document')
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to duplicate document')
     }
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString()
+  const formatDate = (date: Date | string) => {
+    if (typeof date === 'string') {
+      return new Date(date).toLocaleDateString()
+    }
+    return date.toLocaleDateString()
   }
 
   if (isLoading && documents.length === 0) {

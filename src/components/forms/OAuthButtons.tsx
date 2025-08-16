@@ -78,7 +78,7 @@ export default function OAuthButtons({ className = '' }: OAuthButtonsProps) {
         <Button
           type="button"
           variant="outline"
-          className="w-full h-11 bg-white hover:bg-gray-50 text-gray-900 border-gray-300 font-medium"
+          className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white border-slate-700 font-medium hover:cursor-pointer"
           onClick={() => handleOAuthSignIn('google')}
           disabled={loading}
         >
@@ -109,7 +109,7 @@ export default function OAuthButtons({ className = '' }: OAuthButtonsProps) {
         <Button
           type="button"
           variant="outline"
-          className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white border-slate-700 font-medium"
+          className="w-full h-11 bg-slate-900 hover:bg-slate-800 text-white border-slate-700 font-medium hover:cursor-pointer"
           onClick={() => handleOAuthSignIn('github')}
           disabled={loading}
         >

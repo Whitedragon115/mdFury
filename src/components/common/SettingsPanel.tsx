@@ -4,14 +4,13 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from 'next-themes'
 import toast from 'react-hot-toast'
-import { useAuth } from '@/contexts/AuthContext'
+import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Slider } from '@/components/ui/slider'
 import { BackgroundLayer } from '@/components/layout'
-import { ClientAuthService } from '@/lib/auth/client-auth'
 import { 
   Settings, 
   User, 
@@ -32,7 +31,7 @@ interface SettingsPanelProps {
 
 export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const { t, i18n } = useTranslation()
-  const { user, updateUser } = useAuth()
+  const { user, updateUser } = useIntegratedAuth()
   const { theme, setTheme } = useTheme()
   const [activeCategory, setActiveCategory] = useState('profile')
   const [isLoading, setIsLoading] = useState(false)
@@ -79,7 +78,19 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
     setIsLoading(true)
     try {
-      const result = await ClientAuthService.updateProfile({
+      // Update language if changed
+      if (formData.language !== user.language) {
+        i18n.changeLanguage(formData.language)
+      }
+
+      // Update theme if changed using next-themes
+      if (formData.theme !== theme) {
+        setTheme(formData.theme)
+      }
+
+      // Use the integrated updateUser function which handles both OAuth and credential users
+      await updateUser({
+        ...user,
         displayName: formData.displayName,
         profileImage: formData.profileImage,
         language: formData.language,
@@ -89,28 +100,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         backgroundBrightness: formData.backgroundBrightness
       })
 
-      if (result.success && result.user) {
-        // Save the new token if provided
-        if (result.token) {
-          localStorage.setItem('auth-token', result.token)
-        }
-
-        // Update language if changed
-        if (formData.language !== user.language) {
-          i18n.changeLanguage(formData.language)
-        }
-
-        // Update theme if changed using next-themes
-        if (formData.theme !== theme) {
-          setTheme(formData.theme)
-        }
-
-        updateUser(result.user)
-        toast.success(t('settings.notifications.saved'))
-      } else {
-        toast.error(result.message || t('settings.notifications.error'))
-      }
+      toast.success(t('settings.notifications.saved'))
     } catch (error) {
+      console.error('Failed to save settings:', error)
       toast.error(t('settings.notifications.error'))
     } finally {
       setIsLoading(false)
@@ -168,7 +160,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
           ].map(({ value, label, icon: Icon }) => (
             <button
               key={value}
-              onClick={() => setFormData({ ...formData, theme: value as any })}
+              onClick={() => setFormData({ ...formData, theme: value as 'light' | 'dark' | 'system' })}
               className={`p-3 rounded-lg border-2 transition-all hover:scale-105 ${
                 formData.theme === value
                   ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'

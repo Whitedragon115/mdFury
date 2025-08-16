@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Github, MessageCircle, Coffee, Clock, ChartBar, ChartArea } from 'lucide-react'
+import { Github, MessageCircle, Coffee, Clock } from 'lucide-react'
 
 export function Footer() {
   const [uptime, setUptime] = useState('')

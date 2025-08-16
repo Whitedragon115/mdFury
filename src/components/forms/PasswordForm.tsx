@@ -9,7 +9,7 @@ import { Lock, Eye, EyeOff } from 'lucide-react'
 
 interface PasswordFormProps {
   title?: string
-  onSubmit: (password: string) => void
+  onSubmit: (_password: string) => void
   error?: string | null
   isLoading?: boolean
   onCancel?: () => void

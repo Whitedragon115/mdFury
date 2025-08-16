@@ -1,11 +1,11 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useEffect, useState, useCallback } from 'react'
 import { ClientMarkdownService } from '@/lib/api'
 import { ClientAuthService } from '@/lib/auth/client-auth'
-import { AuthProvider, useAuth } from '@/contexts/AuthContext'
+import { AuthProvider } from '@/contexts/AuthContext'
+import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
 import { AuthBasedThemeController } from '@/components/providers'
 import { PasswordForm } from '@/components/forms/PasswordForm'
 import { LoginModal } from '@/components/common'
@@ -16,7 +16,6 @@ import rehypeHighlight from 'rehype-highlight'
 import rehypeRaw from 'rehype-raw'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { 
   FileText, 
   ArrowLeft, 
@@ -52,26 +51,19 @@ interface OwnerSettings {
 function BinPreviewContent() {
   const { id } = useParams()
   const router = useRouter()
-  const { t } = useTranslation()
-  const { user } = useAuth()
+  const { user } = useIntegratedAuth()
   const [binDocument, setBinDocument] = useState<BinDocument | null>(null)
   const [ownerSettings, setOwnerSettings] = useState<OwnerSettings>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [passwordRequired, setPasswordRequired] = useState(false)
-  const [password, setPassword] = useState('')
+  const [_password, setPassword] = useState('')
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [passwordAttempting, setPasswordAttempting] = useState(false)
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [accessDenied, setAccessDenied] = useState(false)
 
-  useEffect(() => {
-    if (id && typeof id === 'string') {
-      loadDocument(id)
-    }
-  }, [id])
-
-  const loadDocument = async (binId: string, inputPassword?: string) => {
+  const loadDocument = useCallback(async (binId: string, inputPassword?: string) => {
     setLoading(true)
     setError(null)
     setPasswordError(null)
@@ -142,7 +134,7 @@ function BinPreviewContent() {
         setShowLoginModal(false)
         setAccessDenied(false)
       }
-    } catch (err) {
+    } catch (_err) {
       if (inputPassword && passwordRequired) {
         setPasswordError('Incorrect password. Please try again.')
       } else {
@@ -154,7 +146,13 @@ function BinPreviewContent() {
       setLoading(false)
       setPasswordAttempting(false)
     }
-  }
+  }, [passwordRequired])
+
+  useEffect(() => {
+    if (id && typeof id === 'string') {
+      loadDocument(id)
+    }
+  }, [id, loadDocument])
 
   const handlePasswordSubmit = (inputPassword: string) => {
     if (!id || typeof id !== 'string') return
@@ -183,7 +181,7 @@ function BinPreviewContent() {
     try {
       await navigator.clipboard.writeText(binDocument.content)
       toast.success('Content copied to clipboard!')
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to copy to clipboard')
     }
   }
@@ -209,7 +207,7 @@ function BinPreviewContent() {
     try {
       await navigator.clipboard.writeText(url)
       toast.success('Share link copied to clipboard!')
-    } catch (err) {
+    } catch (_err) {
       toast.error('Failed to copy share link')
     }
   }

@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { useAuth } from '@/contexts/AuthContext'
+import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
@@ -25,8 +24,8 @@ export default function LoginModal({
   title = "Login Required",
   message = "This document is private. Please login to continue."
 }: LoginModalProps) {
-  const { t } = useTranslation()
-  const { login } = useAuth()
+  // const { t } = useTranslation()
+  const { login } = useIntegratedAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -53,7 +52,7 @@ export default function LoginModal({
       } else {
         toast.error(result.message || 'Login failed')
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('Login failed')
     } finally {
       setIsLoading(false)

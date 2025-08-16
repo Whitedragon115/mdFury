@@ -7,9 +7,9 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useAuth } from '@/contexts/AuthContext'
+import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
 import { LanguageSwitcher } from '@/components/common'
-import { FileText, LogIn, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { FileText, LogIn, Eye, EyeOff } from 'lucide-react'
 import OAuthButtons from './OAuthButtons'
 
 export default function LoginForm() {
@@ -19,7 +19,7 @@ export default function LoginForm() {
     password: ''
   })
   const [showPassword, setShowPassword] = useState(false)
-  const { login, isLoading } = useAuth()
+  const { login, isLoading } = useIntegratedAuth()
 
   // Force dark theme for login page
   useEffect(() => {
@@ -45,7 +45,7 @@ export default function LoginForm() {
         // Redirect to main editor page after successful login
         window.location.href = '/'
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error(t('auth.loginError'))
     }
   }
@@ -54,8 +54,8 @@ export default function LoginForm() {
     setCredentials({ username, password })
   }
 
-  // Check if registration is disabled
-  const isRegistrationDisabled = process.env.NODE_ENV === 'production' 
+  //FEATURE
+  const _isRegistrationDisabled = process.env.NODE_ENV === 'production' 
     ? false // In production, we'll fetch this from an API
     : process.env.DISABLE_REGISTRATION === 'true'
 
@@ -135,7 +135,7 @@ export default function LoginForm() {
 
             <Button 
               type="submit" 
-              className="w-full h-10 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              className="w-full h-10 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 hover:cursor-pointer"
               disabled={isLoading}
             >
               {isLoading ? (

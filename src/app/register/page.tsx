@@ -1,5 +1,6 @@
 import { AuthProvider } from '@/contexts/AuthContext'
 import { RegisterForm } from '@/components/forms'
+import Link from 'next/link'
 
 export default function RegisterPage() {
   // Check if registration is disabled
@@ -19,18 +20,18 @@ export default function RegisterPage() {
             <p className="text-slate-400 mt-2">New account registration is currently disabled.</p>
           </div>
           <div className="space-y-4">
-            <a
+            <Link
               href="/login"
               className="inline-flex items-center justify-center w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
             >
               Back to Login
-            </a>
-            <a
+            </Link>
+            <Link
               href="/"
               className="inline-flex items-center justify-center w-full px-4 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-colors"
             >
               Continue as Guest
-            </a>
+            </Link>
           </div>
         </div>
       </div>

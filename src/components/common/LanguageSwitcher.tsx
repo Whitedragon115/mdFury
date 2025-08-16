@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Globe } from 'lucide-react';
 
 export function LanguageSwitcher() {
-  const { i18n, t } = useTranslation();
+  //WARN ERR language translation remove t
+  const { i18n } = useTranslation();
 
   const toggleLanguage = () => {
     const newLang = i18n.language === 'en' ? 'zh' : 'en';
