@@ -56,8 +56,6 @@ export default function BackgroundLayer({
   // Only show background layer if image is loaded and valid
   if (!currentImage || !imageLoaded) return null
 
-  console.log('Rendering background with:', { currentImage, isVisible, backgroundBrightness, backgroundBlur, backgroundOpacity })
-
   return (
     <>
       {/* Container to clip blur overflow and prevent edge glow */}
