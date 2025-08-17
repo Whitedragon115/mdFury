@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import PasswordModal from './PasswordModal'
 import { 
   Save, 
   Hash, 
@@ -13,7 +15,8 @@ import {
   EyeOff, 
   Lock,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  Shield
 } from 'lucide-react'
 
 interface BinControlsProps {
@@ -52,46 +55,27 @@ export default function BinControls({
   disabledBinId
 }: BinControlsProps) {
   const { t } = useTranslation()
-  const [showPassword, setShowPassword] = useState(false)
-  const [showPasswordField, setShowPasswordField] = useState(hasPassword || !!password)
-
-  // Update showPasswordField when hasPassword or password changes
-  useEffect(() => {
-    setShowPasswordField(hasPassword || !!password)
-  }, [hasPassword, password])
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
 
   const handleTagsInput = (value: string) => {
     const newTags = value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
     onTagsChange(newTags)
   }
-  const togglePasswordProtection = () => {
-    const isPlaceholder = password === '••••••••'
-    const actuallyHasPassword = hasPassword || (password && !isPlaceholder)
-    
-    if (actuallyHasPassword) {
-      // Remove password protection
-      onPasswordChange('')
-      setShowPasswordField(false)
-      setShowPassword(false)
-    } else {
-      // Add password protection
-      if (isPlaceholder) {
-        // Clear placeholder and show field for new password
-        onPasswordChange('')
-      }
-      setShowPasswordField(true)
-      setShowPassword(false)
-      
-      // If adding password protection, make document public
-      if (!isPublic) {
-        onPublicChange(true)
-      }
+
+  const handlePasswordSave = (newPassword: string) => {
+    onPasswordChange(newPassword)
+    // If setting a password, make document public
+    if (newPassword && !isPublic) {
+      onPublicChange(true)
     }
   }
 
   const handlePublicChange = (newIsPublic: boolean) => {
-    // If trying to make document private while it has password protection, prevent it
+    // If trying to make document private while it has password protection, show warning and prevent it
     if (!newIsPublic && currentlyHasPassword) {
+      toast.error('Cannot make password-protected documents private', {
+        duration: 3000,
+      })
       return
     }
     onPublicChange(newIsPublic)
@@ -190,44 +174,23 @@ export default function BinControls({
             <Button
               variant={currentlyHasPassword ? "default" : "outline"}
               size="sm"
-              onClick={togglePasswordProtection}
-              className="h-8 px-3"
+              onClick={() => setShowPasswordModal(true)}
+              className={`h-8 px-3 ${!isPublic ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={!isPublic}
+              title={!isPublic ? 'Cannot set password on private documents' : currentlyHasPassword ? 'Password is set' : 'Set password'}
             >
-              <Lock className="w-3 h-3 mr-1" />
-              {currentlyHasPassword ? 'Protected' : 'No Password'}
+              {currentlyHasPassword ? (
+                <>
+                  <Shield className="w-3 h-3 mr-1" />
+                  Protected
+                </>
+              ) : (
+                <>
+                  <Lock className="w-3 h-3 mr-1" />
+                  Set Password
+                </>
+              )}
             </Button>
-
-            {showPasswordField && (
-              <div className="flex items-center gap-1">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => onPasswordChange(e.target.value)}
-                  placeholder={password === '••••••••' ? 'Change password...' : 'Enter password...'}
-                  className="h-8 text-sm w-32 bg-white dark:bg-slate-800"
-                  onFocus={() => {
-                    // Clear placeholder when user starts typing
-                    if (password === '••••••••') {
-                      onPasswordChange('')
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="h-8 w-8 p-0"
-                  disabled={password === '••••••••'}
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-3 h-3" />
-                  ) : (
-                    <Eye className="w-3 h-3" />
-                  )}
-                </Button>
-              </div>
-            )}
           </div>
 
           {/* Save Button */}
@@ -250,6 +213,15 @@ export default function BinControls({
           </Button>
         </div>
       </div>
+
+      {/* Password Modal */}
+      <PasswordModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        onSave={handlePasswordSave}
+        currentPassword={password}
+        hasPassword={!!currentlyHasPassword}
+      />
     </div>
   )
 }
