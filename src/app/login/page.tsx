@@ -11,12 +11,17 @@ function LoginContent() {
   const searchParams = useSearchParams()
   const [oauthError, setOauthError] = useState<string | null>(null)
   const [showErrorDialog, setShowErrorDialog] = useState(false)
+  const [redirectTo, setRedirectTo] = useState<string | null>(null)
 
   useEffect(() => {
     const error = searchParams.get('error')
     if (error) {
       setOauthError(error)
       setShowErrorDialog(true)
+    }
+    const redirect = searchParams.get('redirect')
+    if (redirect) {
+      setRedirectTo(redirect)
     }
   }, [searchParams])
 
@@ -32,7 +37,7 @@ function LoginContent() {
   return (
     <>
       <AuthBasedThemeController />
-      <LoginForm />
+  <LoginForm redirectTo={redirectTo || undefined} />
       
       {/* OAuth Error Dialog */}
       <OAuthErrorDialog

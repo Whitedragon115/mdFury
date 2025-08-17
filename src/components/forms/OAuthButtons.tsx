@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 
 interface OAuthButtonsProps {
   className?: string
+  redirectTo?: string
 }
 
 interface AuthConfig {
@@ -17,7 +18,7 @@ interface AuthConfig {
   }
 }
 
-export default function OAuthButtons({ className = '' }: OAuthButtonsProps) {
+export default function OAuthButtons({ className = '', redirectTo }: OAuthButtonsProps) {
   const { t } = useTranslation()
   const [authConfig, setAuthConfig] = useState<AuthConfig | null>(null)
   const [loading, setLoading] = useState(false)
@@ -40,7 +41,7 @@ export default function OAuthButtons({ className = '' }: OAuthButtonsProps) {
     setLoading(true)
     try {
       await signIn(provider, { 
-        callbackUrl: '/',
+        callbackUrl: redirectTo || '/',
         redirect: true 
       })
     } catch (error) {

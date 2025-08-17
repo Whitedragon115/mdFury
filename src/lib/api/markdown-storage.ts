@@ -1,4 +1,5 @@
 // Server-side markdown storage using Prisma and MySQL database
+import { constants } from 'buffer'
 import { prisma } from '../database'
 
 export interface SavedMarkdown {
@@ -364,11 +365,12 @@ export class MarkdownStorageService {
       
       // Step 3: Check password protection (only after auth and permission checks)
       if (markdown.password) {
+        
         if (!password) {
           return {
             success: false,
             passwordRequired: true,
-            message: 'This document is password protected.'
+            message: ''
           }
         }
         

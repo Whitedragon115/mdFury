@@ -12,7 +12,11 @@ import { LanguageSwitcher } from '@/components/common'
 import { FileText, LogIn, Eye, EyeOff } from 'lucide-react'
 import OAuthButtons from './OAuthButtons'
 
-export default function LoginForm() {
+interface LoginFormProps {
+  redirectTo?: string
+}
+
+export default function LoginForm({ redirectTo }: LoginFormProps) {
   const { t } = useTranslation()
   const [credentials, setCredentials] = useState({
     username: '',
@@ -41,9 +45,9 @@ export default function LoginForm() {
       if (!response.success) {
         toast.error(response.message || t('auth.loginError'))
       } else {
-        toast.success(`Welcome back, ${credentials.username}!`)
-        // Redirect to main editor page after successful login
-        window.location.href = '/'
+  toast.success(`Welcome back, ${credentials.username}!`)
+  // Redirect back to original page if provided, else to main editor
+  window.location.href = redirectTo || '/'
       }
     } catch (_error) {
       toast.error(t('auth.loginError'))
@@ -163,7 +167,7 @@ export default function LoginForm() {
               </div>
             </div>
             <div className="mt-6">
-              <OAuthButtons />
+              <OAuthButtons redirectTo={redirectTo} />
             </div>
           </div>
 

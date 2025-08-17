@@ -25,7 +25,7 @@ export class IntegratedMarkdownService {
       const { getSession } = await import('next-auth/react')
       const session = await getSession()
       return !!session?.user
-    } catch (error) {
+    } catch (_error) {
       return false
     }
   }
@@ -129,7 +129,7 @@ export class IntegratedMarkdownService {
   }
 
   /**
-   * Get public markdown (same for both user types)
+   * Get public markdown (works for both OAuth and credential users)
    */
   static async getPublicMarkdown(binId: string, password?: string): Promise<{ 
     success: boolean; 
@@ -139,14 +139,73 @@ export class IntegratedMarkdownService {
     requiresAuth?: boolean;
     accessDenied?: boolean;
   }> {
-    const result = await ClientMarkdownService.getPublicMarkdown(binId, password)
-    return {
-      ...result,
-      markdown: result.markdown ? {
-        ...result.markdown,
-        createdAt: typeof result.markdown.createdAt === 'string' ? new Date(result.markdown.createdAt) : result.markdown.createdAt,
-        updatedAt: typeof result.markdown.updatedAt === 'string' ? new Date(result.markdown.updatedAt) : result.markdown.updatedAt,
-      } : undefined
+    try {
+      // For public documents, we need to check authentication and route appropriately
+
+      const url = password 
+        ? `/api/public/${binId}?password=${encodeURIComponent(password)}`
+        : `/api/public/${binId}`
+      
+      // Include auth headers based on user type
+      const headers: { [key: string]: string } = {}
+      
+      // Check for OAuth session first
+      const isOAuth = await this.isOAuthUser()
+      if (isOAuth) {
+        // OAuth users don't need explicit auth headers for public endpoints
+        // The session is handled server-side
+      } else {
+        // Credential users need the token header
+        const token = localStorage.getItem('auth_token')
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+      }
+      
+      const response = await fetch(url, { headers })
+      const data = await response.json()
+
+      // Handle different status codes
+      if (response.status === 406) {
+        return {
+          success: false,
+          passwordRequired: true,
+          message: data.message || 'Password required'
+        }
+      } else if (response.status === 401) {
+        return {
+          success: false,
+          requiresAuth: true,
+          message: data.message || 'Authentication required'
+        }
+      } else if (response.status === 403) {
+        return {
+          success: false,
+          accessDenied: true,
+          message: data.message || 'Access denied'
+        }
+      } else if (response.status === 404) {
+        return {
+          success: false,
+          message: data.message || 'Document not found'
+        }
+      }
+      
+      // Success case - normalize dates
+      return {
+        ...data,
+        markdown: data.markdown ? {
+          ...data.markdown,
+          createdAt: typeof data.markdown.createdAt === 'string' ? new Date(data.markdown.createdAt) : data.markdown.createdAt,
+          updatedAt: typeof data.markdown.updatedAt === 'string' ? new Date(data.markdown.updatedAt) : data.markdown.updatedAt,
+        } : undefined
+      }
+    } catch (error) {
+      console.error('Failed to get public markdown:', error)
+      return {
+        success: false,
+        message: 'Failed to load document'
+      }
     }
   }
 

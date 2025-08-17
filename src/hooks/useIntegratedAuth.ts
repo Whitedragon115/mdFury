@@ -33,7 +33,7 @@ interface UserUpdateData {
 
 export function useIntegratedAuth() {
   const { data: session, status, update: updateSession } = useSession()
-  const { user: customUser, logout: customLogout, updateUser, login, register, isLoading: customLoading } = useAuth()
+  const { user: customUser, logout: customLogout, updateUser, login, register, isLoading: _customLoading } = useAuth()
 
   const logout = useCallback(async () => {
     if (session) {

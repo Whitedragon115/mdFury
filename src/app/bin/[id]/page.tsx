@@ -2,13 +2,11 @@
 
 import { useParams, useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
-import { ClientMarkdownService } from '@/lib/api'
+import { IntegratedMarkdownService } from '@/lib/api'
 import { ClientAuthService } from '@/lib/auth/client-auth'
-import { AuthProvider } from '@/contexts/AuthContext'
 import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
 import { AuthBasedThemeController } from '@/components/providers'
 import { PasswordForm } from '@/components/forms/PasswordForm'
-import { LoginModal } from '@/components/common'
 import { BackgroundLayer } from '@/components/layout'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -60,7 +58,6 @@ function BinPreviewContent() {
   const [_password, setPassword] = useState('')
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [passwordAttempting, setPasswordAttempting] = useState(false)
-  const [showLoginModal, setShowLoginModal] = useState(false)
   const [accessDenied, setAccessDenied] = useState(false)
 
   const loadDocument = useCallback(async (binId: string, inputPassword?: string) => {
@@ -70,9 +67,9 @@ function BinPreviewContent() {
     setAccessDenied(false)
     
     try {
-      // Try to get the document using the client API
-      const result = await ClientMarkdownService.getPublicMarkdown(binId, inputPassword)
-      
+      // Try to get the document using the integrated API
+      const result = await IntegratedMarkdownService.getPublicMarkdown(binId, inputPassword)
+
       if (result.success && result.markdown) {
         setBinDocument({
           id: result.markdown.id,
@@ -81,8 +78,8 @@ function BinPreviewContent() {
           tags: result.markdown.tags || [],
           isPublic: result.markdown.isPublic || false,
           hasPassword: !!result.markdown.password,
-          createdAt: result.markdown.createdAt,
-          updatedAt: result.markdown.updatedAt,
+          createdAt: typeof result.markdown.createdAt === 'string' ? result.markdown.createdAt : result.markdown.createdAt.toISOString(),
+          updatedAt: typeof result.markdown.updatedAt === 'string' ? result.markdown.updatedAt : result.markdown.updatedAt.toISOString(),
           userId: result.markdown.userId
         })
         
@@ -105,24 +102,24 @@ function BinPreviewContent() {
         
         setPasswordRequired(false)
         setPasswordError(null)
-        setShowLoginModal(false)
         setAccessDenied(false)
       } else if (result.requiresAuth) {
-        // Document is private and requires authentication
-        setShowLoginModal(true)
+        // Document is private and requires authentication -> redirect to login with return URL
+        const redirectTarget = typeof window !== 'undefined'
+          ? window.location.pathname + window.location.search
+          : `/bin/${binId}`
+        router.push(`/login?redirect=${encodeURIComponent(redirectTarget)}`)
         setPasswordRequired(false)
         setPasswordError(null)
         setAccessDenied(false)
       } else if (result.accessDenied) {
         // User is authenticated but doesn't have access
         setAccessDenied(true)
-        setShowLoginModal(false)
         setPasswordRequired(false)
         setPasswordError(null)
       } else if (result.passwordRequired) {
         setPasswordRequired(true)
         setPasswordError(null)
-        setShowLoginModal(false)
         setAccessDenied(false)
         // If we were trying a password and got password required, it means wrong password
         if (inputPassword) {
@@ -131,22 +128,21 @@ function BinPreviewContent() {
       } else {
         setError(result.message || 'Document not found')
         setPasswordRequired(false)
-        setShowLoginModal(false)
         setAccessDenied(false)
       }
     } catch (_err) {
-      if (inputPassword && passwordRequired) {
+      // Network or unexpected error; if this was a password attempt, show password error, otherwise generic
+      if (inputPassword) {
         setPasswordError('Incorrect password. Please try again.')
       } else {
         setError('Failed to load document')
       }
-      setShowLoginModal(false)
       setAccessDenied(false)
     } finally {
       setLoading(false)
       setPasswordAttempting(false)
     }
-  }, [passwordRequired])
+  }, [])
 
   useEffect(() => {
     if (id && typeof id === 'string') {
@@ -167,7 +163,6 @@ function BinPreviewContent() {
   }
 
   const handleLoginSuccess = () => {
-    setShowLoginModal(false)
     setAccessDenied(false)
     // Reload the document now that user is authenticated
     if (id && typeof id === 'string') {
@@ -214,14 +209,12 @@ function BinPreviewContent() {
 
   if (loading) {
     return (
-      <AuthProvider>
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-slate-600 dark:text-slate-400">Loading document...</p>
-          </div>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-slate-600 dark:text-slate-400">Loading document...</p>
         </div>
-      </AuthProvider>
+      </div>
     )
   }
 
@@ -264,6 +257,7 @@ function BinPreviewContent() {
     )
   }
 
+  
   if (accessDenied) {
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
@@ -422,14 +416,7 @@ function BinPreviewContent() {
             )}
           </main>
 
-          {/* Login Modal */}
-          <LoginModal
-            isOpen={showLoginModal}
-            onClose={() => setShowLoginModal(false)}
-            onLoginSuccess={handleLoginSuccess}
-            title="Private Document"
-            message="This document is private. Please login to view it."
-          />
+          {/* When login is required, we redirect to /login; no modal shown here */}
         </div>
       </div>
   )
@@ -437,9 +424,9 @@ function BinPreviewContent() {
 
 export default function BinPreviewPage() {
   return (
-    <AuthProvider>
+    <>
       <AuthBasedThemeController />
       <BinPreviewContent />
-    </AuthProvider>
+    </>
   )
 }

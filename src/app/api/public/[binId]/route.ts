@@ -24,7 +24,6 @@ export async function GET(
     
     // Get user from token if provided
     const user = await getUserFromToken(request)
-    
     const result = await MarkdownStorageService.getPublicMarkdown(
       binId, 
       password || undefined,
@@ -46,8 +45,8 @@ export async function GET(
       }
       if (result.passwordRequired) {
         return NextResponse.json(
-          { success: false, message: 'Password required' },
-          { status: 423 }
+          { success: false, message: result.message || 'Password required' },
+          { status: 406 }
         )
       }
       // For any other failure, return 404 to not reveal the existence of private bins
