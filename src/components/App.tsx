@@ -4,9 +4,11 @@ import MarkdownPreviewer from './MarkdownPreviewer'
 import { BackgroundLayer } from '@/components/layout'
 import { Loader2 } from 'lucide-react'
 import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
+import { useBackgroundPreview } from '@/hooks/useBackgroundPreview'
 
 export default function App() {
   const { isLoading, user } = useIntegratedAuth()
+  const { previewState } = useBackgroundPreview()
 
   if (isLoading) {
     return (
@@ -19,14 +21,23 @@ export default function App() {
     )
   }
 
+  // Use preview state if available, otherwise fall back to user settings
+  const backgroundSettings = previewState || {
+    backgroundImage: user?.backgroundImage,
+    backgroundBlur: user?.backgroundBlur,
+    backgroundBrightness: user?.backgroundBrightness,
+    backgroundOpacity: user?.backgroundOpacity
+  }
+
   // Always show the editor - save functionality is restricted based on authentication
   return (
     <>
-      {/* Background Layer */}
+      {/* Background Layer with preview support */}
       <BackgroundLayer
-        backgroundImage={user?.backgroundImage}
-        backgroundBlur={user?.backgroundBlur}
-        backgroundBrightness={user?.backgroundBrightness}
+        backgroundImage={backgroundSettings.backgroundImage}
+        backgroundBlur={backgroundSettings.backgroundBlur}
+        backgroundBrightness={backgroundSettings.backgroundBrightness}
+        backgroundOpacity={backgroundSettings.backgroundOpacity}
       />
       
       <div className="animate-fade-in relative z-10">

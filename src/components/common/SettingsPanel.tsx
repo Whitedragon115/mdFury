@@ -5,12 +5,12 @@ import { useTranslation } from 'react-i18next'
 import { useTheme } from 'next-themes'
 import toast from 'react-hot-toast'
 import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
+import { useBackgroundPreview } from '@/hooks/useBackgroundPreview'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Slider } from '@/components/ui/slider'
-import { BackgroundLayer } from '@/components/layout'
 import { 
   Settings, 
   User, 
@@ -33,6 +33,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const { t, i18n } = useTranslation()
   const { user, updateUser } = useIntegratedAuth()
   const { theme, setTheme } = useTheme()
+  const { setPreview, clearPreview } = useBackgroundPreview()
   const [activeCategory, setActiveCategory] = useState('profile')
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -61,8 +62,33 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     }
   }, [user, theme])
 
-  // Apply background settings will now be handled by BackgroundLayer component
-  // Remove the direct document.body manipulation
+  // Update background preview when settings change
+  useEffect(() => {
+    if (isOpen && formData.backgroundImage) {
+      setPreview({
+        backgroundImage: formData.backgroundImage,
+        backgroundBlur: formData.backgroundBlur,
+        backgroundBrightness: formData.backgroundBrightness,
+        backgroundOpacity: user?.backgroundOpacity
+      })
+    } else if (!isOpen) {
+      clearPreview()
+    }
+  }, [isOpen, formData.backgroundImage, formData.backgroundBlur, formData.backgroundBrightness, user?.backgroundOpacity])
+
+  // Clean up preview when component unmounts or dialog closes
+  useEffect(() => {
+    return () => {
+      if (!isOpen) {
+        clearPreview()
+      }
+    }
+  }, [isOpen])
+
+  const handleClose = () => {
+    clearPreview()
+    onClose()
+  }
 
   if (!user) return null
 
@@ -101,6 +127,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
       })
 
       toast.success(t('settings.notifications.saved'))
+      clearPreview() // Clear preview after successful save
     } catch (error) {
       console.error('Failed to save settings:', error)
       toast.error(t('settings.notifications.error'))
@@ -278,16 +305,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
   return (
     <>
-      {/* Background Preview - only show during settings */}
-      {isOpen && (
-        <BackgroundLayer
-          backgroundImage={formData.backgroundImage}
-          backgroundBlur={formData.backgroundBlur}
-          backgroundBrightness={formData.backgroundBrightness}
-        />
-      )}
-      
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen} onOpenChange={handleClose}>
         <DialogContent className="max-w-5xl w-[95vw] h-[90vh] max-h-[800px] p-0 overflow-hidden sm:rounded-lg">
         <div className="flex h-full flex-col sm:flex-row">
           {/* Sidebar */}
@@ -339,7 +357,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
             {/* Fixed Footer */}
             <div className="flex justify-end gap-3 p-4 sm:p-6 pt-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 backdrop-blur-sm">
-              <Button variant="outline" onClick={onClose} className="min-w-20">
+              <Button variant="outline" onClick={handleClose} className="min-w-20">
                 {t('settings.cancel')}
               </Button>
               <Button onClick={handleSave} disabled={isLoading} className="min-w-20">
