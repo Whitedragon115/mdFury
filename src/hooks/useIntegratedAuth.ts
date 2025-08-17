@@ -36,12 +36,9 @@ export function useIntegratedAuth() {
   const { user: customUser, logout: customLogout, updateUser, login, register, isLoading: _customLoading } = useAuth()
 
   const logout = useCallback(async () => {
-    if (session) {
-      await signOut({ redirect: false })
-    }
-    customLogout()
-    window.location.href = '/login'
-  }, [session, customLogout])
+    // Delegate actual sign-out work to the /logout page for a smoother UX
+    window.location.href = '/logout'
+  }, [])
 
   const updateOAuthUser = useCallback(async (updates: UserUpdateData) => {
     try {
