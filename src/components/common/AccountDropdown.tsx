@@ -22,7 +22,7 @@ import {
 
 export function AccountDropdown() {
   const { t } = useTranslation()
-  const { user, logout, updateUser } = useIntegratedAuth()
+  const { user, logout } = useIntegratedAuth()
   const { theme, setTheme } = useTheme()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
@@ -53,19 +53,13 @@ export function AccountDropdown() {
     setIsOpen(false)
   }
 
-  const handleThemeChange = async (newTheme: 'light' | 'dark' | 'system') => {
-    // Optimistically update UI theme immediately
+  const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
+    // Update next-themes; it writes to localStorage and updates className
     setTheme(newTheme)
     setIsOpen(false)
-
-    // Persist preference via integrated auth update
-    try {
-      await updateUser({ theme: newTheme })
-    } catch (error) {
-      console.error('Failed to persist theme:', error)
-    }
   }
-  const effectiveTheme = (user?.theme as 'light' | 'dark' | 'system' | undefined) ?? theme
+  // Show current selected preference from next-themes only
+  const effectiveTheme = (theme as 'light' | 'dark' | 'system') || 'dark'
 
   const handleLogout = () => {
     logout()

@@ -5,7 +5,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { IntegratedMarkdownService } from '@/lib/api'
 import { ClientAuthService } from '@/lib/auth/client-auth'
 import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
-import { AuthBasedThemeController } from '@/components/providers'
 import { PasswordForm } from '@/components/forms/PasswordForm'
 import { BackgroundLayer } from '@/components/layout'
 import ReactMarkdown from 'react-markdown'
@@ -425,7 +424,6 @@ function BinPreviewContent() {
 export default function BinPreviewPage() {
   return (
     <>
-      <AuthBasedThemeController />
       <BinPreviewContent />
     </>
   )

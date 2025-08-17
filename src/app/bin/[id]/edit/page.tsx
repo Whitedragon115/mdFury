@@ -5,7 +5,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
 import { IntegratedMarkdownService } from '@/lib/api'
 import { SavedMarkdown } from '@/types'
-import { AuthBasedThemeController } from '@/components/providers'
 import MarkdownPreviewer from '@/components/MarkdownPreviewer'
 import { BackgroundLayer } from '@/components/layout'
 import toast from 'react-hot-toast'
@@ -114,7 +113,6 @@ function EditPageContent() {
 export default function EditPage() {
   return (
     <>
-      <AuthBasedThemeController />
       <EditPageContent />
     </>
   )

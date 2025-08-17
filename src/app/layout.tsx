@@ -5,6 +5,7 @@ import { CustomToaster } from "@/components/common";
 import { Footer } from "@/components/layout";
 import { ThemeProvider, NextAuthProvider } from "@/components/providers";
 import { AuthProvider } from "@/contexts/AuthContext";
+import Script from 'next/script'
 
 
 
@@ -22,6 +23,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{
+          __html: `(() => { try { const t = localStorage.getItem('mdbin-theme') || 'dark'; if (t === 'dark') document.documentElement.classList.add('dark'); else document.documentElement.classList.remove('dark'); } catch (_) { document.documentElement.classList.add('dark'); } })();`
+        }} />
+      </head>
       <body
         className={"antialiased min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col"}
       >

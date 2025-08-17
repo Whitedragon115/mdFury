@@ -3,7 +3,6 @@
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
 import { AuthProvider } from '@/contexts/AuthContext'
-import { AuthBasedThemeController } from '@/components/providers'
 import { LoginForm } from '@/components/forms'
 import { OAuthErrorDialog } from '@/components/common'
 
@@ -36,7 +35,6 @@ function LoginContent() {
 
   return (
     <>
-      <AuthBasedThemeController />
   <LoginForm redirectTo={redirectTo || undefined} />
       
       {/* OAuth Error Dialog */}

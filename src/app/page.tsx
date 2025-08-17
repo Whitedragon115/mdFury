@@ -1,6 +1,5 @@
 'use client'
 
-import { AuthBasedThemeController } from '@/components/providers'
 import App from '@/components/App'
 import { OAuthErrorDialog } from '@/components/common'
 import { useSession } from 'next-auth/react'
@@ -50,7 +49,6 @@ function PageContent() {
 
   return (
     <>
-      <AuthBasedThemeController />
       <App />
       
       {/* OAuth Error Dialog */}

@@ -54,7 +54,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         email: user.email || '',
         profileImage: user.profileImage || '',
         language: user.language || 'en',
-        theme: (theme as 'light' | 'dark' | 'system') || 'system',
+  theme: (theme as 'light' | 'dark' | 'system') || 'dark',
         backgroundImage: user.backgroundImage || '',
         backgroundBlur: user.backgroundBlur ?? 0, // Use nullish coalescing to handle 0 properly
         backgroundBrightness: user.backgroundBrightness ?? 70
@@ -109,18 +109,15 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         i18n.changeLanguage(formData.language)
       }
 
-      // Update theme if changed using next-themes
-      if (formData.theme !== theme) {
-        setTheme(formData.theme)
-      }
+  // Update theme using next-themes only (localStorage)
+  if (formData.theme !== theme) setTheme(formData.theme)
 
-      // Use the integrated updateUser function which handles both OAuth and credential users
+  // Persist only non-theme profile fields
       await updateUser({
         ...user,
         displayName: formData.displayName,
         profileImage: formData.profileImage,
         language: formData.language,
-        theme: formData.theme,
         backgroundImage: formData.backgroundImage,
         backgroundBlur: formData.backgroundBlur,
         backgroundBrightness: formData.backgroundBrightness
