@@ -6,9 +6,7 @@ import { useTheme } from 'next-themes'
 
 export function AuthBasedThemeController() {
   const { user, isLoading } = useIntegratedAuth()
-  //WARN
-  // const { theme, setTheme, resolvedTheme } = useTheme()
-  const { setTheme, resolvedTheme } = useTheme()
+  const { setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -20,20 +18,13 @@ export function AuthBasedThemeController() {
 
     if (!user) {
       // Force dark theme for unauthenticated users
-      if (resolvedTheme !== 'dark') {
-        setTheme('dark')
-      }
-      // Also force DOM classes to ensure immediate visual effect
-      document.documentElement.classList.add('dark')
-      document.documentElement.classList.remove('light')
+      setTheme('dark')
     } else {
       // For authenticated users, use their preferred theme
       const userTheme = user.theme === 'system' ? 'dark' : user.theme
-      if (resolvedTheme !== userTheme) {
-        setTheme(userTheme)
-      }
+      setTheme(userTheme)
     }
-  }, [user, isLoading, resolvedTheme, setTheme, mounted])
+  }, [user?.theme, isLoading, setTheme, mounted])
 
   // Prevent hydration mismatch
   if (!mounted) {

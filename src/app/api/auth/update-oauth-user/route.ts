@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
         updatedAt: new Date()
       }
     })
-
+    
     return NextResponse.json({ success: true, user: updatedUser })
   } catch (error) {
     console.error('Failed to update OAuth user:', error)

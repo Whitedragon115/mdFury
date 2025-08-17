@@ -27,6 +27,7 @@ export async function PUT(request: NextRequest) {
 
     // Remove any fields that shouldn't be updated directly
     const { id: _id, username: _username, email: _email, ...allowedUpdates } = updates
+    
     const result = await AuthService.updateUserProfile(user.id, allowedUpdates)
 
     if (result.success) {

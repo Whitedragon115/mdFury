@@ -3,6 +3,17 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { User, LoginCredentials, RegisterCredentials, AuthResponse, ClientAuthService } from '@/lib/auth/client-auth'
 
+interface UserUpdateData {
+  theme?: 'light' | 'dark' | 'system'
+  language?: string
+  displayName?: string
+  profileImage?: string
+  backgroundImage?: string
+  backgroundBlur?: number
+  backgroundBrightness?: number
+  backgroundOpacity?: number
+}
+
 interface AuthContextType {
   user: User | null
   isLoading: boolean
@@ -11,6 +22,9 @@ interface AuthContextType {
   logout: () => void
   isAuthenticated: boolean
   updateUser: (_user: User) => void
+  // OAuth user overrides for immediate UI updates
+  oauthUserOverrides: Partial<UserUpdateData>
+  setOAuthUserOverrides: React.Dispatch<React.SetStateAction<Partial<UserUpdateData>>>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -18,6 +32,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  // OAuth user overrides for immediate UI updates without session refresh
+  const [oauthUserOverrides, setOAuthUserOverrides] = useState<Partial<UserUpdateData>>({})
 
   // Check for existing token on mount
   useEffect(() => {
@@ -108,22 +124,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // For OAuth users, we don't have a token, so just update local state
       if (!token) {
-        console.log('No auth token found, updating local state only (OAuth user)')
         setUser(updatedUser)
         return
       }
 
-      // For traditional login users, update via API
+      // For traditional login users, optimistically update local state first
+      setUser(updatedUser)
+      
+      // Then update via API in background
       const response = await ClientAuthService.updateProfile(updatedUser)
       
       if (response.success && response.user && response.token) {
         setUser(response.user)
         localStorage.setItem('auth_token', response.token)
       }
+      // If API fails, keep the optimistic update
     } catch (error) {
       console.error('Failed to update user:', error)
-      // Still update local state even if API call fails
-      setUser(updatedUser)
+      // Keep the optimistic update even if API call fails
     }
   }, [])
 
@@ -138,6 +156,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       isAuthenticated,
       updateUser,
+      oauthUserOverrides,
+      setOAuthUserOverrides,
     }}>
       {children}
     </AuthContext.Provider>

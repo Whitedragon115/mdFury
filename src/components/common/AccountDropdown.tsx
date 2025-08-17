@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
 import { useTheme } from 'next-themes'
 import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
-import { ClientAuthService } from '@/lib/auth/client-auth'
 import { Button } from '@/components/ui/button'
 import SettingsPanel from './SettingsPanel'
 import Image from 'next/image'
@@ -24,7 +23,7 @@ import {
 export function AccountDropdown() {
   const { t } = useTranslation()
   const { user, logout, updateUser } = useIntegratedAuth()
-  const { theme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
@@ -55,20 +54,18 @@ export function AccountDropdown() {
   }
 
   const handleThemeChange = async (newTheme: 'light' | 'dark' | 'system') => {
-    if (user) {
-      try {
-        const result = await ClientAuthService.updateProfile({ theme: newTheme })
-        if (result.success && result.user) {
-          setIsOpen(false)
-          updateUser(result.user)
-          return
-        }
-      } catch (error) {
-        console.error('Failed to update theme:', error)
-      }
-    }
+    // Optimistically update UI theme immediately
+    setTheme(newTheme)
     setIsOpen(false)
+
+    // Persist preference via integrated auth update
+    try {
+      await updateUser({ theme: newTheme })
+    } catch (error) {
+      console.error('Failed to persist theme:', error)
+    }
   }
+  const effectiveTheme = (user?.theme as 'light' | 'dark' | 'system' | undefined) ?? theme
 
   const handleLogout = () => {
     logout()
@@ -138,7 +135,7 @@ export function AccountDropdown() {
                   <button
                     onClick={() => handleThemeChange('light')}
                     className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
-                      theme === 'light' 
+                      effectiveTheme === 'light' 
                         ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
@@ -149,7 +146,7 @@ export function AccountDropdown() {
                   <button
                     onClick={() => handleThemeChange('dark')}
                     className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
-                      theme === 'dark' 
+                      effectiveTheme === 'dark' 
                         ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
@@ -160,7 +157,7 @@ export function AccountDropdown() {
                   <button
                     onClick={() => handleThemeChange('system')}
                     className={`flex-1 flex items-center justify-center gap-1 px-2 py-1 text-xs rounded transition-colors ${
-                      theme === 'system' 
+                      effectiveTheme === 'system' 
                         ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
                         : 'hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}

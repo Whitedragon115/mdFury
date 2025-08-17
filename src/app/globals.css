@@ -119,9 +119,7 @@
   body {
     @apply bg-background text-foreground;
   }
-}
-
-/* Syntax highlighting styles */
+}/* Syntax highlighting styles */
 .hljs {
   background: transparent !important;
 }

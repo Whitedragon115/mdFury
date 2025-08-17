@@ -20,6 +20,7 @@ interface SessionUser {
   backgroundOpacity?: number | null
 }
 
+// UserUpdateData type - keep it simple for now
 interface UserUpdateData {
   theme?: 'light' | 'dark' | 'system'
   language?: string
@@ -33,7 +34,18 @@ interface UserUpdateData {
 
 export function useIntegratedAuth() {
   const { data: session, status, update: updateSession } = useSession()
-  const { user: customUser, logout: customLogout, updateUser, login, register, isLoading: _customLoading } = useAuth()
+  const { 
+    user: customUser, 
+    logout: customLogout, 
+    updateUser, 
+    login, 
+    register, 
+    isLoading: _customLoading,
+    oauthUserOverrides,
+    setOAuthUserOverrides
+  } = useAuth()
+  // Remove local state since we're now using context
+  // const [oauthUserOverrides, setOAuthUserOverrides] = useState<Partial<UserUpdateData>>({})
 
   const logout = useCallback(async () => {
     // Delegate actual sign-out work to the /logout page for a smoother UX
@@ -73,30 +85,23 @@ export function useIntegratedAuth() {
         }
         await updateUser(fullUserData)
       } else if (session) {
-        // For OAuth users, use the special OAuth update endpoint
-        const result = await updateOAuthUser({
-          theme: updatedUser.theme,
-          language: updatedUser.language,
-          displayName: updatedUser.displayName,
-          profileImage: updatedUser.profileImage,
-          backgroundImage: updatedUser.backgroundImage,
-          backgroundBlur: updatedUser.backgroundBlur,
-          backgroundBrightness: updatedUser.backgroundBrightness,
-          backgroundOpacity: updatedUser.backgroundOpacity
-        })
+        // For OAuth users, optimistically update local UI without session refresh
+        setOAuthUserOverrides(prev => ({ ...prev, ...updatedUser }))
         
-        if (result.success) {
-          // Force a session refresh to get updated data without page reload
-          await updateSession()
-        }
+        // Persist to backend in the background
+        const filteredPayload = Object.fromEntries(
+          Object.entries(updatedUser).filter(([_, value]) => value !== undefined)
+        )
+        
+        await updateOAuthUser(filteredPayload as UserUpdateData)
+        // Avoid calling updateSession() to prevent loading flicker.
+        // The UI already reflects changes via oauthUserOverrides.
       }
     } catch (error) {
       console.error('Failed to update user:', error)
       throw error
     }
-  }, [session, customUser, updateOAuthUser, updateUser, updateSession])
-
-  // Memoize the return value to prevent infinite re-renders
+  }, [session, customUser, updateOAuthUser, updateUser, setOAuthUserOverrides])  // Memoize the return value to prevent infinite re-renders
   return useMemo(() => {
     // Determine the active authentication method
     // Priority: 1. Active credential user, 2. OAuth session
@@ -114,7 +119,8 @@ export function useIntegratedAuth() {
     else if (session?.user) {
       isAuthenticated = true
       const sUser = session.user as SessionUser
-      user = {
+      // Base user from session
+      const baseUser = {
         id: sUser.id || undefined,
         username: sUser.username || sUser.name || undefined,
         email: sUser.email || undefined,
@@ -127,6 +133,8 @@ export function useIntegratedAuth() {
         backgroundBrightness: sUser.backgroundBrightness ?? 70,
         backgroundOpacity: sUser.backgroundOpacity ?? 0.1
       }
+      // Merge local optimistic overrides (e.g., theme) for immediate reflection
+      user = { ...baseUser, ...oauthUserOverrides }
       activeAuth = 'oauth'
     }
 
@@ -140,5 +148,5 @@ export function useIntegratedAuth() {
       register,
       authType: activeAuth
     }
-  }, [session, customUser, status, logout, integratedUpdateUser, login, register])
+  }, [session, customUser, status, oauthUserOverrides, logout, integratedUpdateUser, login, register, setOAuthUserOverrides])
 }
