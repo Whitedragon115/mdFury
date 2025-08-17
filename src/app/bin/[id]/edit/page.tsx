@@ -5,7 +5,6 @@ import { useEffect, useState, useCallback } from 'react'
 import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
 import { IntegratedMarkdownService } from '@/lib/api'
 import { SavedMarkdown } from '@/types'
-import { AuthProvider } from '@/contexts/AuthContext'
 import { AuthBasedThemeController } from '@/components/providers'
 import MarkdownPreviewer from '@/components/MarkdownPreviewer'
 import { BackgroundLayer } from '@/components/layout'
@@ -106,7 +105,7 @@ function EditPageContent() {
         backgroundOpacity={user?.backgroundOpacity || 0.3}
       />
       <div className="relative z-10">
-        <MarkdownPreviewer initialDocument={document} />
+        <MarkdownPreviewer initialDocument={document} isEditMode={true} />
       </div>
     </div>
   )
@@ -114,9 +113,9 @@ function EditPageContent() {
 
 export default function EditPage() {
   return (
-    <AuthProvider>
+    <>
       <AuthBasedThemeController />
       <EditPageContent />
-    </AuthProvider>
+    </>
   )
 }

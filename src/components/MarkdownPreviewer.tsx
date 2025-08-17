@@ -75,7 +75,13 @@ You can add math expressions like \`E = mc²\`
 **Start editing** in the left panel to see the magic happen! ✨
 `
 
-export default function MarkdownPreviewer({ initialDocument }: { initialDocument?: SavedMarkdown | null }) {
+export default function MarkdownPreviewer({ 
+  initialDocument, 
+  isEditMode = false 
+}: { 
+  initialDocument?: SavedMarkdown | null
+  isEditMode?: boolean
+}) {
 
   
   const { t } = useTranslation()
@@ -83,6 +89,7 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
   const { user } = useIntegratedAuth()
   const searchParams = useSearchParams()
   const pathname = usePathname()
+  
   const documentId = searchParams.get('doc')
   const [markdown, setMarkdown] = useState(initialMarkdown)
   const [currentDocId, setCurrentDocId] = useState<string>()
@@ -260,10 +267,12 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
           // Update URL if binId changed
           if (result.markdown && result.markdown.binId) {
             setCurrentBinId(result.markdown.binId)
-            // Redirect to view page after update
-            window.location.href = `/bin/${result.markdown.binId}`
-          } else {
-            // Fallback: use current binId
+            // Only redirect if not in edit mode
+            if (!isEditMode) {
+              window.location.href = `/bin/${result.markdown.binId}`
+            }
+          } else if (!isEditMode) {
+            // Fallback: use current binId only if not in edit mode
             window.location.href = `/bin/${binId}`
           }
           const previewUrl = `${window.location.origin}/bin/${binId}`
@@ -284,10 +293,12 @@ export default function MarkdownPreviewer({ initialDocument }: { initialDocument
         if (result.success && result.markdown) {
           setCurrentDocId(result.markdown.id)
           setCurrentBinId(result.markdown.binId || result.markdown.id)
-          // Redirect to view page after create
-          const binId = result.markdown.binId || result.markdown.id
-          window.location.href = `/bin/${binId}`
-          const previewUrl = `${window.location.origin}/bin/${binId}`
+          // Only redirect if not in edit mode
+          if (!isEditMode) {
+            const binId = result.markdown.binId || result.markdown.id
+            window.location.href = `/bin/${binId}`
+          }
+          const previewUrl = `${window.location.origin}/bin/${result.markdown.binId || result.markdown.id}`
           // Auto copy view link to clipboard
           try {
             await navigator.clipboard.writeText(previewUrl)

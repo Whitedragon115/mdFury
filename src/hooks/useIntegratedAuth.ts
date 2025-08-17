@@ -33,7 +33,7 @@ interface UserUpdateData {
 
 export function useIntegratedAuth() {
   const { data: session, status, update: updateSession } = useSession()
-  const { user: customUser, logout: customLogout, updateUser, login, register } = useAuth()
+  const { user: customUser, logout: customLogout, updateUser, login, register, isLoading: customLoading } = useAuth()
 
   const logout = useCallback(async () => {
     if (session) {
@@ -67,7 +67,15 @@ export function useIntegratedAuth() {
 
   const integratedUpdateUser = useCallback(async (updatedUser: UserUpdateData) => {
     try {
-      if (session) {
+      // Priority: credential user first, then OAuth
+      if (customUser) {
+        // For traditional credential users, use the existing updateUser
+        const fullUserData = {
+          ...customUser,
+          ...updatedUser
+        }
+        await updateUser(fullUserData)
+      } else if (session) {
         // For OAuth users, use the special OAuth update endpoint
         const result = await updateOAuthUser({
           theme: updatedUser.theme,
@@ -84,40 +92,46 @@ export function useIntegratedAuth() {
           // Force a session refresh to get updated data without page reload
           await updateSession()
         }
-      } else {
-        // For traditional credential users, use the existing updateUser
-        // Convert UserUpdateData to User by merging with existing user data
-        if (customUser) {
-          const fullUserData = {
-            ...customUser,
-            ...updatedUser
-          }
-          await updateUser(fullUserData)
-        }
       }
     } catch (error) {
       console.error('Failed to update user:', error)
       throw error
     }
-  }, [session, updateOAuthUser, updateUser, updateSession])
+  }, [session, customUser, updateOAuthUser, updateUser, updateSession])
 
   // Memoize the return value to prevent infinite re-renders
   return useMemo(() => {
-    const isAuthenticated = !!session || !!customUser
-    const sUser = session?.user as SessionUser | undefined
-    const user = sUser ? {
-      id: sUser.id || undefined,
-      username: sUser.username || sUser.name || undefined,
-      email: sUser.email || undefined,
-      displayName: sUser.displayName || sUser.name || undefined,
-      profileImage: sUser.image || '',
-      language: (sUser.language as string) || 'en',
-      theme: (sUser.theme as 'light' | 'dark' | 'system') || 'dark',
-      backgroundImage: sUser.backgroundImage || undefined,
-      backgroundBlur: sUser.backgroundBlur ?? 0,
-      backgroundBrightness: sUser.backgroundBrightness ?? 70,
-      backgroundOpacity: sUser.backgroundOpacity ?? 0.1
-    } : customUser
+    // Determine the active authentication method
+    // Priority: 1. Active credential user, 2. OAuth session
+    let isAuthenticated = false
+    let user = null
+    let activeAuth = 'none'
+
+    // Check credential authentication first (higher priority)
+    if (customUser) {
+      isAuthenticated = true
+      user = customUser
+      activeAuth = 'credentials'
+    }
+    // Only use OAuth if no credential user is present
+    else if (session?.user) {
+      isAuthenticated = true
+      const sUser = session.user as SessionUser
+      user = {
+        id: sUser.id || undefined,
+        username: sUser.username || sUser.name || undefined,
+        email: sUser.email || undefined,
+        displayName: sUser.displayName || sUser.name || undefined,
+        profileImage: sUser.image || '',
+        language: (sUser.language as string) || 'en',
+        theme: (sUser.theme as 'light' | 'dark' | 'system') || 'dark',
+        backgroundImage: sUser.backgroundImage || undefined,
+        backgroundBlur: sUser.backgroundBlur ?? 0,
+        backgroundBrightness: sUser.backgroundBrightness ?? 70,
+        backgroundOpacity: sUser.backgroundOpacity ?? 0.1
+      }
+      activeAuth = 'oauth'
+    }
 
     return {
       user,
@@ -126,7 +140,8 @@ export function useIntegratedAuth() {
       logout,
       updateUser: integratedUpdateUser,
       login,
-      register
+      register,
+      authType: activeAuth
     }
   }, [session, customUser, status, logout, integratedUpdateUser, login, register])
 }

@@ -14,10 +14,18 @@ export class IntegratedMarkdownService {
    */
   private static async isOAuthUser(): Promise<boolean> {
     try {
+      // First check if there's an active credential token
+      const token = localStorage.getItem('auth_token')
+      if (token) {
+        // If there's a credential token, prioritize credentials
+        return false
+      }
+
+      // Only check OAuth if no credential token exists
       const { getSession } = await import('next-auth/react')
       const session = await getSession()
       return !!session?.user
-    } catch {
+    } catch (error) {
       return false
     }
   }
@@ -33,11 +41,14 @@ export class IntegratedMarkdownService {
     } else {
       // Convert the client markdown service response to match types
       const markdowns = await ClientMarkdownService.getUserMarkdowns()
-      return markdowns.map(doc => ({
+      
+      const convertedMarkdowns = markdowns.map(doc => ({
         ...doc,
         createdAt: typeof doc.createdAt === 'string' ? new Date(doc.createdAt) : doc.createdAt,
         updatedAt: typeof doc.updatedAt === 'string' ? new Date(doc.updatedAt) : doc.updatedAt,
       }))
+      
+      return convertedMarkdowns
     }
   }
 

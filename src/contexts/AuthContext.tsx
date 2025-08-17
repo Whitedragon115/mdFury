@@ -24,8 +24,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const checkExistingAuth = async () => {
       try {
         const token = localStorage.getItem('auth_token')
+        
         if (token) {
           const response = await ClientAuthService.verifyToken(token)
+          
           if (response.success && response.user) {
             setUser(response.user)
           } else {
@@ -50,6 +52,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.success && response.user && response.token) {
         setUser(response.user)
         localStorage.setItem('auth_token', response.token)
+        
+        // Clear any existing NextAuth session to avoid conflicts
+        try {
+          const { signOut } = await import('next-auth/react')
+          await signOut({ redirect: false })
+        } catch (error) {
+          console.warn('Failed to clear OAuth session:', error)
+        }
       }
       
       return response
@@ -68,6 +78,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.success && response.user && response.token) {
         setUser(response.user)
         localStorage.setItem('auth_token', response.token)
+        
+        // Clear any existing NextAuth session to avoid conflicts
+        try {
+          const { signOut } = await import('next-auth/react')
+          await signOut({ redirect: false })
+        } catch (error) {
+          console.warn('Failed to clear OAuth session:', error)
+        }
       }
       
       return response
