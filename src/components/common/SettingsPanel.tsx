@@ -103,7 +103,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         clearPreview()
       }
     }
-  }, [isOpen])
+  }, [isOpen, clearPreview])
 
   const handleClose = () => {
     clearPreview()

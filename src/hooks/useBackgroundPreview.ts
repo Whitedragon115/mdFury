@@ -9,8 +9,8 @@ interface BackgroundPreviewState {
   backgroundOpacity?: number
 }
 
+const globalListeners: Set<(_state: BackgroundPreviewState | null) => void> = new Set()
 let globalPreviewState: BackgroundPreviewState | null = null
-let globalListeners: Set<(state: BackgroundPreviewState | null) => void> = new Set()
 
 export function useBackgroundPreview() {
   const [previewState, setPreviewState] = useState<BackgroundPreviewState | null>(globalPreviewState)

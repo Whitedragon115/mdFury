@@ -1,5 +1,4 @@
 // Server-side markdown storage using Prisma and MySQL database
-import { constants } from 'buffer'
 import { prisma } from '../database'
 
 export interface SavedMarkdown {

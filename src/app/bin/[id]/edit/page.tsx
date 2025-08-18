@@ -51,7 +51,7 @@ function EditPageContent() {
     } finally {
       setIsLoading(false)
     }
-  }, [id, user?.id, router]) // Only depend on user.id, not entire user object
+  }, [id, user, router]) // Include user dependency
 
   useEffect(() => {
     if (authLoading) return
@@ -62,7 +62,7 @@ function EditPageContent() {
     }
 
     loadDocument()
-  }, [id, user?.id, authLoading, router, loadDocument])
+  }, [id, user, authLoading, router, loadDocument])
 
   // Use preview state if available, otherwise fall back to user settings
   const backgroundSettings = previewState || {

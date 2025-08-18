@@ -9,7 +9,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
   DialogDescription,
 } from '@/components/ui/dialog'
 import { Eye, EyeOff, Lock, Unlock } from 'lucide-react'
@@ -17,7 +16,7 @@ import { Eye, EyeOff, Lock, Unlock } from 'lucide-react'
 interface PasswordModalProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (password: string) => void
+  onSave: (_password: string) => void
   currentPassword: string
   hasPassword: boolean
 }

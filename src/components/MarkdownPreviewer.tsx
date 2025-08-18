@@ -140,7 +140,7 @@ export default function MarkdownPreviewer({
     } catch (_error) {
       toast.error('Failed to load document')
     }
-  }, [user?.id]) // Only depend on user ID, not the entire user object
+  }, [user]) // Include user dependency
 
   useEffect(() => {
     if (initialDocument) {
@@ -315,18 +315,6 @@ export default function MarkdownPreviewer({
     } finally {
       setIsSaving(false)
     }
-  }
-
-  const handleNewDocument = () => {
-    // Reset to initial state and clear URL
-    setMarkdown(initialMarkdown)
-    setCurrentDocId(undefined)
-    setCurrentDocTitle('')
-    setCurrentTags([])
-    setIsPublic(true) // Default to public
-    setBinPassword('')
-    setCurrentBinId('') // Don't generate ID until save
-    window.history.replaceState(null, '', '/')
   }
 
   const handleLogin = () => {

@@ -52,7 +52,6 @@ export default function LogoutPage() {
         <div className="text-center">
           <div className="mx-auto mb-4 text-slate-200 text-xl">You have been signed out</div>
           <p className="text-gray-400">Redirecting to Home...</p>
-          <a className="text-blue-400 hover:text-blue-300" href="/">Return now</a>
         </div>
       )}
     </div>

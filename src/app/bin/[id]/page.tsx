@@ -141,7 +141,7 @@ function BinPreviewContent() {
       setLoading(false)
       setPasswordAttempting(false)
     }
-  }, [])
+  }, [router])
 
   useEffect(() => {
     if (id && typeof id === 'string') {
@@ -159,14 +159,6 @@ function BinPreviewContent() {
 
   const handleBackToHome = () => {
     router.push('/')
-  }
-
-  const handleLoginSuccess = () => {
-    setAccessDenied(false)
-    // Reload the document now that user is authenticated
-    if (id && typeof id === 'string') {
-      loadDocument(id)
-    }
   }
 
   const copyToClipboard = async () => {

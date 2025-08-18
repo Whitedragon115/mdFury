@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Wrapper to persist to localStorage when oauthUserOverrides changes
   const setOAuthUserOverrides = useCallback((
-    value: Partial<UserUpdateData> | ((prev: Partial<UserUpdateData>) => Partial<UserUpdateData>)
+    value: Partial<UserUpdateData> | ((_prev: Partial<UserUpdateData>) => Partial<UserUpdateData>)
   ) => {
     setOAuthUserOverridesState(prevState => {
       const newState = typeof value === 'function' ? value(prevState) : value

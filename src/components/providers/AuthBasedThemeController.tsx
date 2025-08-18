@@ -21,10 +21,10 @@ export function AuthBasedThemeController() {
       setTheme('dark')
     } else {
       // For authenticated users, use their preferred theme
-      const userTheme = user.theme === 'system' ? 'dark' : user.theme
+      const userTheme = user.theme === 'system' ? 'dark' : (user.theme || 'dark')
       setTheme(userTheme)
     }
-  }, [user?.theme, isLoading, setTheme, mounted])
+  }, [user, isLoading, setTheme, mounted])
 
   // Prevent hydration mismatch
   if (!mounted) {

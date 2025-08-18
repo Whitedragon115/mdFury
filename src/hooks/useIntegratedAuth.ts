@@ -1,8 +1,23 @@
 'use client'
 
-import { useSession, signOut } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useMemo, useCallback, useEffect, useRef } from 'react'
+
+// Type for our integrated user object
+interface IntegratedUser {
+  id?: string
+  username?: string
+  email?: string
+  displayName?: string
+  profileImage?: string
+  language?: string
+  theme?: 'light' | 'dark' | 'system'
+  backgroundImage?: string
+  backgroundBlur?: number
+  backgroundBrightness?: number
+  backgroundOpacity?: number
+}
 
 // Extended session user type to cover OAuth + custom fields
 interface SessionUser {
@@ -36,7 +51,7 @@ export function useIntegratedAuth() {
   const { data: session, status, update: updateSession } = useSession()
   const { 
     user: customUser, 
-    logout: customLogout, 
+    logout: _customLogout, 
     updateUser, 
     login, 
     register, 
@@ -48,14 +63,14 @@ export function useIntegratedAuth() {
   // const [oauthUserOverrides, setOAuthUserOverrides] = useState<Partial<UserUpdateData>>({})
 
   // Use ref to store previous user to avoid unnecessary re-renders
-  const previousUserRef = useRef<any>(null)
+  const previousUserRef = useRef<IntegratedUser | null>(null)
 
   // Helper function to deep compare user objects
-  const usersAreEqual = (user1: any, user2: any): boolean => {
+  const usersAreEqual = (user1: IntegratedUser | null, user2: IntegratedUser | null): boolean => {
     if (!user1 && !user2) return true
     if (!user1 || !user2) return false
     
-    const keys = ['id', 'username', 'email', 'displayName', 'profileImage', 'language', 'theme', 
+    const keys: (keyof IntegratedUser)[] = ['id', 'username', 'email', 'displayName', 'profileImage', 'language', 'theme', 
                   'backgroundImage', 'backgroundBlur', 'backgroundBrightness', 'backgroundOpacity']
     
     return keys.every(key => user1[key] === user2[key])
