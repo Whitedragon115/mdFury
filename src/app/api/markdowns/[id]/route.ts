@@ -13,7 +13,7 @@ async function getUserFromToken(request: NextRequest) {
   return await AuthService.getUserByToken(token)
 }
 
-export async function GET(
+export async function   GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
