@@ -10,14 +10,18 @@ Authorization: Bearer <your_jwt_token>
 
 ## Table of Contents
 
-- [Markdown API](#markdown-api)
-  - [Get All Markdowns](#get-all-markdowns)
-  - [Create New Markdown](#create-new-markdown)
-  - [Get Specific Markdown](#get-specific-markdown)
-  - [Update Markdown](#update-markdown)
-  - [Delete Markdown](#delete-markdown)
-- [Public API (Bins)](#public-api-bins)
-  - [Get Public Markdown](#get-public-markdown)
+- [mdFury API Documentation](#mdfury-api-documentation)
+  - [Table of Contents](#table-of-contents)
+  - [Markdown API](#markdown-api)
+    - [Get All Markdowns](#get-all-markdowns)
+    - [Create New Markdown](#create-new-markdown)
+    - [Get Specific Markdown](#get-specific-markdown)
+    - [Update Markdown](#update-markdown)
+    - [Delete Markdown](#delete-markdown)
+  - [Public API (Bins)](#public-api-bins)
+    - [Get Public Markdown](#get-public-markdown)
+  - [Error Response Format](#error-response-format)
+  - [Notes](#notes)
 
 ## Markdown API
 
