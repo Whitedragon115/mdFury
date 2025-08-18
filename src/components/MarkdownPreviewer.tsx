@@ -140,7 +140,7 @@ export default function MarkdownPreviewer({
     } catch (_error) {
       toast.error('Failed to load document')
     }
-  }, [user])
+  }, [user?.id]) // Only depend on user ID, not the entire user object
 
   useEffect(() => {
     if (initialDocument) {

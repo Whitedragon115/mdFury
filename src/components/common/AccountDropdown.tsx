@@ -22,12 +22,22 @@ import {
 
 export function AccountDropdown() {
   const { t } = useTranslation()
-  const { user, logout } = useIntegratedAuth()
+  const { user, logout, updateTheme } = useIntegratedAuth()
   const { theme, setTheme } = useTheme()
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Add console logging for user data
+  console.log('🎭 AccountDropdown user data:', {
+    hasUser: !!user,
+    userId: user?.id,
+    username: user?.username,
+    displayName: user?.displayName,
+    email: user?.email,
+    profileImage: user?.profileImage
+  })
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -56,6 +66,8 @@ export function AccountDropdown() {
   const handleThemeChange = (newTheme: 'light' | 'dark' | 'system') => {
     // Update next-themes; it writes to localStorage and updates className
     setTheme(newTheme)
+    // Use the dedicated theme update function (no async operations)
+    updateTheme(newTheme)
     setIsOpen(false)
   }
   // Show current selected preference from next-themes only

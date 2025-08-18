@@ -131,6 +131,7 @@
     "backgroundImageDesc": "Set a custom background image for the interface",
     "backgroundBlur": "Background Blur",
     "backgroundBrightness": "Background Brightness (lower = darker)",
+    "backgroundOpacity": "Background Opacity",
     "themes": {
       "system": "System",
       "light": "Light",

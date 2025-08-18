@@ -1,4 +1,3 @@
-import { AuthProvider } from '@/contexts/AuthContext'
 import { RegisterForm } from '@/components/forms'
 import Link from 'next/link'
 
@@ -38,9 +37,5 @@ export default function RegisterPage() {
     )
   }
 
-  return (
-    <AuthProvider>
-      <RegisterForm />
-    </AuthProvider>
-  )
+  return <RegisterForm />
 }

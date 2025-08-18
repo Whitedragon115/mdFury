@@ -131,6 +131,7 @@
     "backgroundImageDesc": "設定介面的自定義背景圖片",
     "backgroundBlur": "背景模糊",
     "backgroundBrightness": "背景亮度 (數值越低 = 越暗)",
+    "backgroundOpacity": "背景透明度",
     "themes": {
       "system": "系統",
       "light": "淺色",

@@ -33,7 +33,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   // OAuth user overrides for immediate UI updates without session refresh
-  const [oauthUserOverrides, setOAuthUserOverrides] = useState<Partial<UserUpdateData>>({})
+  // Load from localStorage on initialization
+  const [oauthUserOverrides, setOAuthUserOverridesState] = useState<Partial<UserUpdateData>>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('oauth_user_overrides')
+        return stored ? JSON.parse(stored) : {}
+      } catch {
+        return {}
+      }
+    }
+    return {}
+  })
+
+  // Wrapper to persist to localStorage when oauthUserOverrides changes
+  const setOAuthUserOverrides = useCallback((
+    value: Partial<UserUpdateData> | ((prev: Partial<UserUpdateData>) => Partial<UserUpdateData>)
+  ) => {
+    setOAuthUserOverridesState(prevState => {
+      const newState = typeof value === 'function' ? value(prevState) : value
+      // Persist to localStorage
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('oauth_user_overrides', JSON.stringify(newState))
+        } catch (error) {
+          console.error('Failed to persist oauthUserOverrides to localStorage:', error)
+        }
+      }
+      return newState
+    })
+  }, [])
 
   // Check for existing token on mount
   useEffect(() => {

@@ -2,6 +2,10 @@
 import { prisma } from '../database'
 import bcrypt from 'bcryptjs'
 
+// Default values for consistency
+const DEFAULT_BACKGROUND_BRIGHTNESS = 70
+const DEFAULT_BACKGROUND_OPACITY = 0.1
+
 export interface UserProfile {
   id: string
   username: string
@@ -99,8 +103,8 @@ export class AuthService {
         theme: (user.theme as 'light' | 'dark' | 'system') || 'system',
         backgroundImage: user.backgroundImage || '',
         backgroundBlur: user.backgroundBlur || 0,
-        backgroundBrightness: user.backgroundBrightness || 100,
-        backgroundOpacity: user.backgroundOpacity || 100
+        backgroundBrightness: user.backgroundBrightness || DEFAULT_BACKGROUND_BRIGHTNESS,
+        backgroundOpacity: user.backgroundOpacity || DEFAULT_BACKGROUND_OPACITY
       }
     } catch (_error) {
       return null
@@ -153,8 +157,8 @@ export class AuthService {
         theme: (user.theme as 'light' | 'dark' | 'system') || 'system',
         backgroundImage: user.backgroundImage || '',
         backgroundBlur: user.backgroundBlur || 0,
-        backgroundBrightness: user.backgroundBrightness || 100,
-        backgroundOpacity: user.backgroundOpacity || 100
+        backgroundBrightness: user.backgroundBrightness || DEFAULT_BACKGROUND_BRIGHTNESS,
+        backgroundOpacity: user.backgroundOpacity || DEFAULT_BACKGROUND_OPACITY
       }
 
       const token = this.generateToken(userWithoutPassword)
@@ -244,7 +248,7 @@ export class AuthService {
         backgroundImage: newUser.backgroundImage || '',
         backgroundBlur: newUser.backgroundBlur || 0,
         backgroundBrightness: newUser.backgroundBrightness || 70,
-        backgroundOpacity: newUser.backgroundOpacity || 0.1
+        backgroundOpacity: newUser.backgroundOpacity || DEFAULT_BACKGROUND_OPACITY
       }
 
       const token = this.generateToken(userResponse)
@@ -287,8 +291,8 @@ export class AuthService {
         theme: (updatedUser.theme as 'light' | 'dark' | 'system') || 'system',
         backgroundImage: updatedUser.backgroundImage || '',
         backgroundBlur: updatedUser.backgroundBlur || 0,
-        backgroundBrightness: updatedUser.backgroundBrightness || 100,
-        backgroundOpacity: updatedUser.backgroundOpacity || 100
+        backgroundBrightness: updatedUser.backgroundBrightness || DEFAULT_BACKGROUND_BRIGHTNESS,
+        backgroundOpacity: updatedUser.backgroundOpacity || DEFAULT_BACKGROUND_OPACITY
       }
 
       // Generate new token with updated user data
@@ -321,7 +325,7 @@ export class AuthService {
         theme: (user.theme as 'light' | 'dark' | 'system') || 'system',
         backgroundImage: user.backgroundImage || '',
         backgroundBlur: user.backgroundBlur || 0,
-        backgroundBrightness: user.backgroundBrightness || 100,
+        backgroundBrightness: user.backgroundBrightness || DEFAULT_BACKGROUND_BRIGHTNESS,
         createdAt: user.createdAt.toISOString(),
         lastLogin: user.lastLogin.toISOString()
       }))
@@ -350,8 +354,8 @@ export class AuthService {
         theme: (user.theme as 'light' | 'dark' | 'system') || 'system',
         backgroundImage: user.backgroundImage || '',
         backgroundBlur: user.backgroundBlur || 0,
-        backgroundBrightness: user.backgroundBrightness || 100,
-        backgroundOpacity: user.backgroundOpacity || 100
+        backgroundBrightness: user.backgroundBrightness || DEFAULT_BACKGROUND_BRIGHTNESS,
+        backgroundOpacity: user.backgroundOpacity || DEFAULT_BACKGROUND_OPACITY
       }
     } catch (error) {
       console.error('Failed to get user by ID:', error)

@@ -2,7 +2,6 @@
 
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
-import { AuthProvider } from '@/contexts/AuthContext'
 import { LoginForm } from '@/components/forms'
 import { OAuthErrorDialog } from '@/components/common'
 
@@ -67,11 +66,9 @@ function LoginLoading() {
 export default function LoginPage() {
   return (
     <div className="dark min-h-screen bg-slate-900">
-      <AuthProvider>
-        <Suspense fallback={<LoginLoading />}>
-          <LoginContent />
-        </Suspense>
-      </AuthProvider>
+      <Suspense fallback={<LoginLoading />}>
+        <LoginContent />
+      </Suspense>
     </div>
   )
 }

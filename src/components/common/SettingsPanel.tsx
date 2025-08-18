@@ -31,7 +31,7 @@ interface SettingsPanelProps {
 
 export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const { t, i18n } = useTranslation()
-  const { user, updateUser } = useIntegratedAuth()
+  const { user, updateUser, updateTheme } = useIntegratedAuth()
   const { theme, setTheme } = useTheme()
   const { setPreview, clearPreview } = useBackgroundPreview()
   const [activeCategory, setActiveCategory] = useState('profile')
@@ -44,7 +44,8 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     theme: 'system' as 'light' | 'dark' | 'system',
     backgroundImage: '',
     backgroundBlur: 0,
-    backgroundBrightness: 70 // Increase default brightness
+    backgroundBrightness: 70, // Consistent default
+    backgroundOpacity: 0.1 // Add opacity control
   })
 
   useEffect(() => {
@@ -54,10 +55,11 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         email: user.email || '',
         profileImage: user.profileImage || '',
         language: user.language || 'en',
-  theme: (theme as 'light' | 'dark' | 'system') || 'dark',
+        theme: (theme as 'light' | 'dark' | 'system') || 'dark',
         backgroundImage: user.backgroundImage || '',
         backgroundBlur: user.backgroundBlur ?? 0, // Use nullish coalescing to handle 0 properly
-        backgroundBrightness: user.backgroundBrightness ?? 70
+        backgroundBrightness: user.backgroundBrightness ?? 70,
+        backgroundOpacity: user.backgroundOpacity ?? 0.1
       })
     }
   }, [user, theme])
@@ -69,12 +71,12 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         backgroundImage: formData.backgroundImage,
         backgroundBlur: formData.backgroundBlur,
         backgroundBrightness: formData.backgroundBrightness,
-        backgroundOpacity: user?.backgroundOpacity
+        backgroundOpacity: formData.backgroundOpacity
       })
     } else if (!isOpen) {
       clearPreview()
     }
-  }, [isOpen, formData.backgroundImage, formData.backgroundBlur, formData.backgroundBrightness, user?.backgroundOpacity])
+  }, [isOpen, formData.backgroundImage, formData.backgroundBlur, formData.backgroundBrightness, formData.backgroundOpacity, setPreview, clearPreview])
 
   // Clean up preview when component unmounts or dialog closes
   useEffect(() => {
@@ -104,25 +106,39 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
     setIsLoading(true)
     try {
-      // Update language if changed
-      if (formData.language !== user.language) {
-        i18n.changeLanguage(formData.language)
-      }
-
-  // Update theme using next-themes only (localStorage)
-  if (formData.theme !== theme) setTheme(formData.theme)
-
-  // Persist only non-theme profile fields
-      await updateUser({
-        ...user,
+      console.log('💾 Saving settings:', {
         displayName: formData.displayName,
         profileImage: formData.profileImage,
         language: formData.language,
         backgroundImage: formData.backgroundImage,
         backgroundBlur: formData.backgroundBlur,
-        backgroundBrightness: formData.backgroundBrightness
+        backgroundBrightness: formData.backgroundBrightness,
+        backgroundOpacity: formData.backgroundOpacity
       })
 
+      // Update language if changed
+      if (formData.language !== user.language) {
+        i18n.changeLanguage(formData.language)
+      }
+
+      // Update theme using next-themes and dedicated theme function
+      if (formData.theme !== theme) {
+        setTheme(formData.theme)
+        updateTheme(formData.theme)
+      }
+
+      // Persist non-theme profile fields
+      await updateUser({
+        displayName: formData.displayName,
+        profileImage: formData.profileImage,
+        language: formData.language,
+        backgroundImage: formData.backgroundImage,
+        backgroundBlur: formData.backgroundBlur,
+        backgroundBrightness: formData.backgroundBrightness,
+        backgroundOpacity: formData.backgroundOpacity
+      })
+
+      console.log('✅ Settings saved successfully')
       toast.success(t('settings.notifications.saved'))
       clearPreview() // Clear preview after successful save
     } catch (error) {
@@ -277,6 +293,24 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
             </div>
             <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-1">
               <span>10%</span>
+              <span>100%</span>
+            </div>
+          </div>
+
+          <div>
+            <Label>{t('settings.backgroundOpacity')}: {Math.round(formData.backgroundOpacity * 100)}%</Label>
+            <div className="mt-2">
+              <Slider
+                value={[formData.backgroundOpacity]}
+                onValueChange={(value) => setFormData({ ...formData, backgroundOpacity: value[0] })}
+                max={1}
+                min={0}
+                step={0.05}
+                className="w-full"
+              />
+            </div>
+            <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <span>0%</span>
               <span>100%</span>
             </div>
           </div>

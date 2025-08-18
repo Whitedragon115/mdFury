@@ -7,12 +7,14 @@ import { IntegratedMarkdownService } from '@/lib/api'
 import { SavedMarkdown } from '@/types'
 import MarkdownPreviewer from '@/components/MarkdownPreviewer'
 import { BackgroundLayer } from '@/components/layout'
+import { useBackgroundPreview } from '@/hooks/useBackgroundPreview'
 import toast from 'react-hot-toast'
 
 function EditPageContent() {
   const { id } = useParams()
   const router = useRouter()
   const { user, isLoading: authLoading } = useIntegratedAuth()
+  const { previewState } = useBackgroundPreview()
   const [document, setDocument] = useState<SavedMarkdown | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [hasPermission, setHasPermission] = useState(false)
@@ -49,7 +51,7 @@ function EditPageContent() {
     } finally {
       setIsLoading(false)
     }
-  }, [id, user, router])
+  }, [id, user?.id, router]) // Only depend on user.id, not entire user object
 
   useEffect(() => {
     if (authLoading) return
@@ -60,16 +62,24 @@ function EditPageContent() {
     }
 
     loadDocument()
-  }, [id, user, authLoading, router, loadDocument])
+  }, [id, user?.id, authLoading, router, loadDocument])
+
+  // Use preview state if available, otherwise fall back to user settings
+  const backgroundSettings = previewState || {
+    backgroundImage: user?.backgroundImage,
+    backgroundBlur: user?.backgroundBlur,
+    backgroundBrightness: user?.backgroundBrightness,
+    backgroundOpacity: user?.backgroundOpacity
+  }
 
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <BackgroundLayer
-          backgroundImage={user?.backgroundImage}
-          backgroundBlur={user?.backgroundBlur || 0}
-          backgroundBrightness={user?.backgroundBrightness || 100}
-          backgroundOpacity={user?.backgroundOpacity || 0.3}
+          backgroundImage={backgroundSettings.backgroundImage}
+          backgroundBlur={backgroundSettings.backgroundBlur}
+          backgroundBrightness={backgroundSettings.backgroundBrightness}
+          backgroundOpacity={backgroundSettings.backgroundOpacity}
         />
         <div className="text-center relative z-10">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -83,10 +93,10 @@ function EditPageContent() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <BackgroundLayer
-          backgroundImage={user?.backgroundImage}
-          backgroundBlur={user?.backgroundBlur || 0}
-          backgroundBrightness={user?.backgroundBrightness || 100}
-          backgroundOpacity={user?.backgroundOpacity || 0.3}
+          backgroundImage={backgroundSettings.backgroundImage}
+          backgroundBlur={backgroundSettings.backgroundBlur}
+          backgroundBrightness={backgroundSettings.backgroundBrightness}
+          backgroundOpacity={backgroundSettings.backgroundOpacity}
         />
         <div className="text-center relative z-10">
           <p className="text-red-600 dark:text-red-400">Access denied</p>
@@ -95,25 +105,24 @@ function EditPageContent() {
     )
   }
 
+  // Main editor view - copy the structure from App.tsx
   return (
-    <div className="min-h-screen">
+    <>
+      {/* Background Layer with preview support */}
       <BackgroundLayer
-        backgroundImage={user?.backgroundImage}
-        backgroundBlur={user?.backgroundBlur || 0}
-        backgroundBrightness={user?.backgroundBrightness || 100}
-        backgroundOpacity={user?.backgroundOpacity || 0.3}
+        backgroundImage={backgroundSettings.backgroundImage}
+        backgroundBlur={backgroundSettings.backgroundBlur}
+        backgroundBrightness={backgroundSettings.backgroundBrightness}
+        backgroundOpacity={backgroundSettings.backgroundOpacity}
       />
-      <div className="relative z-10">
+      
+      <div className="animate-fade-in relative z-10">
         <MarkdownPreviewer initialDocument={document} isEditMode={true} />
       </div>
-    </div>
+    </>
   )
 }
 
 export default function EditPage() {
-  return (
-    <>
-      <EditPageContent />
-    </>
-  )
+  return <EditPageContent />
 }
