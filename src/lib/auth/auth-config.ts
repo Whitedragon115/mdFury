@@ -100,7 +100,6 @@ export const authConfig: NextAuthOptions = {
           })
           
           if (!existingUser) {
-            console.log('OAuth registration is disabled and user does not exist')
             return false
           }
         }
@@ -112,17 +111,14 @@ export const authConfig: NextAuthOptions = {
     },
     
     async jwt({ token, user, account, trigger }) {
-      console.log('🔍 JWT Callback called:', { trigger, hasUser: !!user, hasAccount: !!account, accountProvider: account?.provider })
       
       // If this is a session update trigger, refresh data from database
       if (trigger === 'update' && token.email) {
-        console.log('🔄 Session update trigger, refreshing from DB for:', token.email)
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email as string }
         })
         
         if (dbUser) {
-          console.log('✅ Found user in DB:', { id: dbUser.id, name: dbUser.name, displayName: dbUser.displayName })
           token.id = dbUser.id
           token.username = dbUser.username
           token.displayName = dbUser.displayName || dbUser.name
@@ -138,20 +134,11 @@ export const authConfig: NextAuthOptions = {
 
       // If this is the first time JWT is created (when user signs in)
       if (user) {
-        console.log('👤 User object received:', { id: user.id, name: user.name, email: user.email })
         
         if (account?.provider === 'google' || account?.provider === 'github') {
-          console.log(`🔐 OAuth login with ${account.provider}`)
           // For OAuth users, get fresh data from database and sync fields
           const dbUser = await prisma.user.findUnique({
             where: { email: user.email! }
-          })
-          
-          console.log('📊 DB User found:', { 
-            id: dbUser?.id, 
-            name: dbUser?.name, 
-            displayName: dbUser?.displayName,
-            email: dbUser?.email 
           })
           
           if (dbUser) {
@@ -159,63 +146,39 @@ export const authConfig: NextAuthOptions = {
             let needsUpdate = false
             const updateData: Partial<{ displayName: string; profileImage: string; name: string }> = {}
             
-            console.log('🔄 Checking if sync needed:', { 
-              userNameFromProvider: user.name, 
-              dbName: dbUser.name, 
-              dbDisplayName: dbUser.displayName 
-            })
-            
             // For OAuth users, always use the fresh name from the provider
             // Sync provider name to both name and displayName fields
             if (user.name && dbUser.name !== user.name) {
-              console.log('📝 Syncing name field:', { from: dbUser.name, to: user.name })
               updateData.name = user.name
               updateData.displayName = user.name
               needsUpdate = true
             } else if (user.name && (!dbUser.displayName || dbUser.displayName !== user.name)) {
               // Also sync name -> displayName if displayName is missing or different
-              console.log('📝 Syncing displayName field:', { from: dbUser.displayName, to: user.name })
               updateData.displayName = user.name
               needsUpdate = true
             }
             
             // Sync image -> profileImage
             if (user.image && (!dbUser.profileImage || dbUser.profileImage !== user.image)) {
-              console.log('🖼️ Syncing profile image:', { from: dbUser.profileImage, to: user.image })
               updateData.profileImage = user.image
               needsUpdate = true
             }
             
             // Update user if needed
             if (needsUpdate) {
-              console.log('💾 Updating user in DB with:', updateData)
               const updatedDbUser = await prisma.user.update({
                 where: { id: dbUser.id },
                 data: updateData
-              })
-              console.log('✅ User updated successfully:', { 
-                id: updatedDbUser.id, 
-                name: updatedDbUser.name, 
-                displayName: updatedDbUser.displayName 
               })
               // Use updated data for token
               token.id = updatedDbUser.id
               token.username = updatedDbUser.username
               token.displayName = updatedDbUser.displayName || updatedDbUser.name
             } else {
-              console.log('⏭️ No update needed, using existing data')
               token.id = dbUser.id
               token.username = dbUser.username
               token.displayName = dbUser.displayName || dbUser.name
             }
-            
-            console.log('🏷️ Setting token values:', {
-              id: token.id,
-              username: token.username,
-              displayName: token.displayName,
-              language: dbUser.language,
-              theme: dbUser.theme
-            })
             
             token.language = dbUser.language
             token.theme = dbUser.theme
@@ -226,7 +189,6 @@ export const authConfig: NextAuthOptions = {
           }
         } else {
           // For credentials users
-          console.log('🔑 Credentials login')
           const pUser = user as NextAuthUser
           const t = token as Tokenish
           t.id = pUser.id
@@ -239,31 +201,13 @@ export const authConfig: NextAuthOptions = {
           t.backgroundBrightness = pUser.backgroundBrightness ?? 70
           t.backgroundOpacity = pUser.backgroundOpacity ?? 0.1
           
-          console.log('🏷️ Credentials token set:', {
-            id: t.id,
-            username: t.username,
-            displayName: t.displayName
-          })
         }
       }
 
-      console.log('🎯 Final token before return:', {
-        id: token.id,
-        username: token.username,
-        displayName: token.displayName,
-        email: token.email
-      })
       return token
     },
     
     async session({ session, token }) {
-      console.log('📋 Session callback called')
-      console.log('🎫 Token received in session:', {
-        id: token.id,
-        username: token.username,
-        displayName: token.displayName,
-        email: token.email
-      })
       
       if (token && session.user) {
         const t = token as Tokenish
@@ -278,13 +222,6 @@ export const authConfig: NextAuthOptions = {
         sUser.backgroundBrightness = (t.backgroundBrightness as number) ?? undefined
         sUser.backgroundOpacity = (t.backgroundOpacity as number) ?? undefined
         
-        console.log('👤 Final session user:', {
-          id: sUser.id,
-          username: sUser.username,
-          displayName: sUser.displayName,
-          name: sUser.name,
-          email: sUser.email
-        })
       }
       
       return session

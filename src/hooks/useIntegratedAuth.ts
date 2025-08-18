@@ -115,7 +115,6 @@ export function useIntegratedAuth() {
   // Clear identity overrides when OAuth session is active
   useEffect(() => {
     if (session?.user && !customUser) {
-      console.log('🧹 Clearing identity overrides for OAuth session')
       clearIdentityOverrides()
     }
   }, [session?.user, customUser, clearIdentityOverrides])
@@ -123,7 +122,6 @@ export function useIntegratedAuth() {
   // Clear all overrides when no user is logged in
   useEffect(() => {
     if (!customUser && !session?.user) {
-      console.log('🧹 Clearing all overrides - no user logged in')
       setOAuthUserOverrides({})
     }
   }, [customUser, session?.user, setOAuthUserOverrides])
@@ -163,17 +161,6 @@ export function useIntegratedAuth() {
 
   // Memoize the return value to prevent infinite re-renders
   return useMemo(() => {
-    console.log('🔗 useIntegratedAuth recalculating...')
-    console.log('📊 Current state:', {
-      hasCustomUser: !!customUser,
-      hasSession: !!session,
-      sessionStatus: status,
-      customUserId: customUser?.id,
-      customUserDisplayName: customUser?.displayName,
-      sessionUserId: (session?.user as SessionUser)?.id,
-      sessionUserDisplayName: (session?.user as SessionUser)?.displayName,
-      sessionUserName: session?.user?.name
-    })
     
     // Determine the active authentication method
     // Priority: 1. Active credential user, 2. OAuth session
@@ -183,7 +170,6 @@ export function useIntegratedAuth() {
 
     // Check credential authentication first (higher priority)
     if (customUser) {
-      console.log('✅ Using credential auth')
       isAuthenticated = true
       // Merge local optimistic overrides for credential users too
       user = { ...customUser, ...oauthUserOverrides }
@@ -191,16 +177,8 @@ export function useIntegratedAuth() {
     }
     // Only use OAuth if no credential user is present
     else if (session?.user) {
-      console.log('✅ Using OAuth auth')
       isAuthenticated = true
       const sUser = session.user as SessionUser
-      console.log('🔍 Session user details:', {
-        id: sUser.id,
-        username: sUser.username,
-        name: sUser.name,
-        displayName: sUser.displayName,
-        email: sUser.email
-      })
       
       // Base user from session
       const baseUser = {
@@ -217,19 +195,6 @@ export function useIntegratedAuth() {
         backgroundOpacity: sUser.backgroundOpacity ?? 0.1
       }
       
-      console.log('🏗️ Base user constructed:', {
-        id: baseUser.id,
-        username: baseUser.username,
-        displayName: baseUser.displayName,
-        email: baseUser.email,
-        backgroundImage: baseUser.backgroundImage,
-        backgroundBlur: baseUser.backgroundBlur,
-        backgroundBrightness: baseUser.backgroundBrightness,
-        backgroundOpacity: baseUser.backgroundOpacity
-      })
-      
-      console.log('🔧 OAuth user overrides:', oauthUserOverrides)
-      
       // For OAuth users, only apply overrides for specific fields (like theme)
       // Don't override core identity fields like displayName, username, email from session
       const filteredOverrides = Object.fromEntries(
@@ -238,33 +203,16 @@ export function useIntegratedAuth() {
         )
       )
       
-      console.log('🔧 Filtered overrides (excluding identity fields):', filteredOverrides)
-      
       // Merge local optimistic overrides (but exclude identity fields for OAuth)
       user = { ...baseUser, ...filteredOverrides }
       activeAuth = 'oauth'
       
-      console.log('🎯 Final merged user:', {
-        id: user.id,
-        username: user.username,
-        displayName: user.displayName,
-        email: user.email
-      })
     }
-
-    console.log('🏁 Final auth result:', {
-      isAuthenticated,
-      authType: activeAuth,
-      userId: user?.id,
-      userDisplayName: user?.displayName
-    })
 
     // Only return new user object if it's actually different
     if (usersAreEqual(user, previousUserRef.current)) {
-      console.log('👤 User unchanged, reusing previous object')
       user = previousUserRef.current
     } else {
-      console.log('👤 User changed, updating reference')
       previousUserRef.current = user
     }
 

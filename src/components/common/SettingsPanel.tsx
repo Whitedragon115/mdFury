@@ -52,14 +52,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   // Only initialize form data once when user is first loaded
   useEffect(() => {
     if (user && !hasInitialized) {
-      console.log('🎯 Initializing settings form with user data:', {
-        userId: user.id,
-        displayName: user.displayName,
-        backgroundImage: user.backgroundImage,
-        backgroundBlur: user.backgroundBlur,
-        backgroundBrightness: user.backgroundBrightness,
-        backgroundOpacity: user.backgroundOpacity
-      })
       
       setFormData({
         displayName: user.displayName || '',
@@ -79,12 +71,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   // Add debugging for user changes
   useEffect(() => {
     if (hasInitialized) {
-      console.log('⚠️ User object changed after form initialization:', {
-        userId: user?.id,
-        userDisplayName: user?.displayName,
-        userBackgroundImage: user?.backgroundImage,
-        hasInitialized
-      })
+      // User object changed after form initialization
     }
   }, [user, hasInitialized])
 
@@ -138,15 +125,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
     setIsLoading(true)
     try {
-      console.log('💾 Saving settings:', {
-        displayName: formData.displayName,
-        profileImage: formData.profileImage,
-        language: formData.language,
-        backgroundImage: formData.backgroundImage,
-        backgroundBlur: formData.backgroundBlur,
-        backgroundBrightness: formData.backgroundBrightness,
-        backgroundOpacity: formData.backgroundOpacity
-      })
 
       // Update language if changed
       if (formData.language !== user.language) {
@@ -170,7 +148,6 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         backgroundOpacity: formData.backgroundOpacity
       })
 
-      console.log('✅ Settings saved successfully')
       toast.success(t('settings.notifications.saved'))
       clearPreview() // Clear preview after successful save
     } catch (error) {

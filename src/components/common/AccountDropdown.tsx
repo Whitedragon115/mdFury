@@ -29,16 +29,6 @@ export function AccountDropdown() {
   const [showSettings, setShowSettings] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Add console logging for user data
-  console.log('🎭 AccountDropdown user data:', {
-    hasUser: !!user,
-    userId: user?.id,
-    username: user?.username,
-    displayName: user?.displayName,
-    email: user?.email,
-    profileImage: user?.profileImage
-  })
-
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
