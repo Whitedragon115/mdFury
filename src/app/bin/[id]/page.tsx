@@ -293,19 +293,29 @@ function BinPreviewContent() {
             <div className="container mx-auto px-4 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <Button variant="ghost" onClick={() => router.push('/')}>
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    Back to Editor
-                  </Button>
+                  {/* mdFury Logo */}
+                  <div 
+                    className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                    onClick={() => window.location.href = '/'}
+                  >
+                    <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+                      <FileText className="w-5 h-5 text-white" />
+                    </div>
+                    <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                      mdFury
+                    </h1>
+                  </div>
+                  
+                  <div className="h-6 w-px bg-slate-300 dark:bg-slate-600" />
                   
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+                    <div className="p-2 bg-gradient-to-r from-green-500 to-teal-600 rounded-lg">
                       <Eye className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <h1 className="text-xl font-bold text-slate-800 dark:text-slate-200">
+                      <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">
                         {binDocument?.title || 'Untitled Document'}
-                      </h1>
+                      </h2>
                       <p className="text-sm text-slate-500 dark:text-slate-400">
                         Bin ID: {id}
                       </p>

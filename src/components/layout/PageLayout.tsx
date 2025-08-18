@@ -15,13 +15,20 @@ export function PageLayout({ children, showHeader = true }: PageLayoutProps) {
   const { user } = useIntegratedAuth()
   const { t } = useTranslation()
 
+  const handleLogoClick = () => {
+    window.location.href = '/'
+  }
+
   return (
     <div className="min-h-screen transition-all duration-500">
       {showHeader && (
         <header className="border-b border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm sticky top-0 z-10">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div 
+                className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity duration-200"
+                onClick={handleLogoClick}
+              >
                 <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
                   <FileText className="w-6 h-6 text-white" />
                 </div>

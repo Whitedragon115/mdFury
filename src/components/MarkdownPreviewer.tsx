@@ -345,9 +345,9 @@ export default function MarkdownPreviewer({
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">              
             <button 
-              onClick={handleNewDocument}
+              onClick={() => window.location.href = '/'}
               className="flex items-center gap-3 group transition-all duration-200 hover:scale-105"
-              title="Create new document"
+              title="Go to home page"
             >
               <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg group-hover:shadow-lg transition-all duration-200">
                 <FileText className="w-6 h-6 text-white" />

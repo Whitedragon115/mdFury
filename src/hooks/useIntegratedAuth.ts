@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from 'next-auth/react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useMemo, useCallback, useEffect } from 'react'
+import { useMemo, useCallback, useEffect, useRef } from 'react'
 
 // Extended session user type to cover OAuth + custom fields
 interface SessionUser {
@@ -46,6 +46,20 @@ export function useIntegratedAuth() {
   } = useAuth()
   // Remove local state since we're now using context
   // const [oauthUserOverrides, setOAuthUserOverrides] = useState<Partial<UserUpdateData>>({})
+
+  // Use ref to store previous user to avoid unnecessary re-renders
+  const previousUserRef = useRef<any>(null)
+
+  // Helper function to deep compare user objects
+  const usersAreEqual = (user1: any, user2: any): boolean => {
+    if (!user1 && !user2) return true
+    if (!user1 || !user2) return false
+    
+    const keys = ['id', 'username', 'email', 'displayName', 'profileImage', 'language', 'theme', 
+                  'backgroundImage', 'backgroundBlur', 'backgroundBrightness', 'backgroundOpacity']
+    
+    return keys.every(key => user1[key] === user2[key])
+  }
 
   const logout = useCallback(async () => {
     // Delegate actual sign-out work to the /logout page for a smoother UX
@@ -244,6 +258,15 @@ export function useIntegratedAuth() {
       userId: user?.id,
       userDisplayName: user?.displayName
     })
+
+    // Only return new user object if it's actually different
+    if (usersAreEqual(user, previousUserRef.current)) {
+      console.log('👤 User unchanged, reusing previous object')
+      user = previousUserRef.current
+    } else {
+      console.log('👤 User changed, updating reference')
+      previousUserRef.current = user
+    }
 
     return {
       user,

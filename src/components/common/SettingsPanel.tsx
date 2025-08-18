@@ -36,6 +36,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const { setPreview, clearPreview } = useBackgroundPreview()
   const [activeCategory, setActiveCategory] = useState('profile')
   const [isLoading, setIsLoading] = useState(false)
+  const [hasInitialized, setHasInitialized] = useState(false) // Track if form has been initialized
   const [formData, setFormData] = useState({
     displayName: '',
     email: '',
@@ -48,8 +49,18 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     backgroundOpacity: 0.1 // Add opacity control
   })
 
+  // Only initialize form data once when user is first loaded
   useEffect(() => {
-    if (user) {
+    if (user && !hasInitialized) {
+      console.log('🎯 Initializing settings form with user data:', {
+        userId: user.id,
+        displayName: user.displayName,
+        backgroundImage: user.backgroundImage,
+        backgroundBlur: user.backgroundBlur,
+        backgroundBrightness: user.backgroundBrightness,
+        backgroundOpacity: user.backgroundOpacity
+      })
+      
       setFormData({
         displayName: user.displayName || '',
         email: user.email || '',
@@ -57,12 +68,32 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         language: user.language || 'en',
         theme: (theme as 'light' | 'dark' | 'system') || 'dark',
         backgroundImage: user.backgroundImage || '',
-        backgroundBlur: user.backgroundBlur ?? 0, // Use nullish coalescing to handle 0 properly
+        backgroundBlur: user.backgroundBlur ?? 0,
         backgroundBrightness: user.backgroundBrightness ?? 70,
         backgroundOpacity: user.backgroundOpacity ?? 0.1
       })
+      setHasInitialized(true)
     }
-  }, [user, theme])
+  }, [user, theme, hasInitialized])
+
+  // Add debugging for user changes
+  useEffect(() => {
+    if (hasInitialized) {
+      console.log('⚠️ User object changed after form initialization:', {
+        userId: user?.id,
+        userDisplayName: user?.displayName,
+        userBackgroundImage: user?.backgroundImage,
+        hasInitialized
+      })
+    }
+  }, [user, hasInitialized])
+
+  // Reset initialization flag when dialog opens/closes to allow re-initialization
+  useEffect(() => {
+    if (!isOpen) {
+      setHasInitialized(false)
+    }
+  }, [isOpen])
 
   // Update background preview when settings change
   useEffect(() => {
@@ -89,6 +120,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
   const handleClose = () => {
     clearPreview()
+    setHasInitialized(false) // Reset initialization flag when closing
     onClose()
   }
 
