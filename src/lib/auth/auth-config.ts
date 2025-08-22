@@ -3,7 +3,7 @@ import GoogleProvider from 'next-auth/providers/google'
 import GitHubProvider from 'next-auth/providers/github'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
-import { prisma } from '../prisma'
+import { prisma } from '../database/prisma'
 import { AuthService } from './auth'
 
 // Helper types to avoid explicit `any`
@@ -138,30 +138,30 @@ export const authConfig: NextAuthOptions = {
       if (user) {
         
         if (account?.provider === 'google' || account?.provider === 'github') {
-          // For OAuth users, get fresh data from database and sync fields
+          // For OAuth users, get fresh data from database and only sync provider image
           const dbUser = await prisma.user.findUnique({
             where: { email: user.email! }
           })
           
           if (dbUser) {
-            // Sync NextAuth fields with our custom fields if they exist
+            // Only sync provider fields if they don't exist in database
             let needsUpdate = false
             const updateData: Partial<{ displayName: string; profileImage: string; name: string }> = {}
             
-            // For OAuth users, always use the fresh name from the provider
-            // Sync provider name to both name and displayName fields
-            if (user.name && dbUser.name !== user.name) {
+            // Only update name field if it's missing in database (for compatibility)
+            if (user.name && !dbUser.name) {
               updateData.name = user.name
-              updateData.displayName = user.name
               needsUpdate = true
-            } else if (user.name && (!dbUser.displayName || dbUser.displayName !== user.name)) {
-              // Also sync name -> displayName if displayName is missing or different
+            }
+            
+            // Only set displayName from provider if user hasn't set a custom one
+            if (user.name && !dbUser.displayName) {
               updateData.displayName = user.name
               needsUpdate = true
             }
             
-            // Sync image -> profileImage
-            if (user.image && (!dbUser.profileImage || dbUser.profileImage !== user.image)) {
+            // Always sync latest provider image (profile photos can change)
+            if (user.image && dbUser.profileImage !== user.image) {
               updateData.profileImage = user.image
               needsUpdate = true
             }
@@ -175,11 +175,13 @@ export const authConfig: NextAuthOptions = {
               // Use updated data for token
               token.id = updatedDbUser.id
               token.username = updatedDbUser.username
+              // Always prioritize database displayName over provider name
               token.displayName = updatedDbUser.displayName || updatedDbUser.name
               token.profileImage = updatedDbUser.profileImage || updatedDbUser.image
             } else {
               token.id = dbUser.id
               token.username = dbUser.username
+              // Always prioritize database displayName over provider name
               token.displayName = dbUser.displayName || dbUser.name
               token.profileImage = dbUser.profileImage || dbUser.image
             }

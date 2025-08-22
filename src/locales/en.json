@@ -187,6 +187,10 @@
     "notifications": {
       "saved": "Settings saved successfully!",
       "error": "Failed to save settings"
+    },
+    "confirmLogout": {
+      "title": "Logout Required",
+      "description": "To apply changes to your display name or profile picture, you need to logout and login again. Your changes have been saved to the database."
     }
   },
   "common": {

@@ -79,11 +79,13 @@ export function useIntegratedAuth() {
 
   const logout = useCallback(async () => {
     // Delegate actual sign-out work to the /logout page for a smoother UX
+    console.log('LOGOUT CALLED - stack trace:', new Error().stack)
     window.location.href = '/logout'
   }, [])
 
   const updateOAuthUser = useCallback(async (updates: UserUpdateData) => {
     try {
+      console.log('updateOAuthUser: Starting API call with updates:', updates)
       const response = await fetch('/api/auth/update-oauth-user', {
         method: 'POST',
         headers: {
@@ -92,17 +94,60 @@ export function useIntegratedAuth() {
         body: JSON.stringify(updates),
       })
 
+      console.log('updateOAuthUser: API response status:', response.status)
       const result = await response.json()
+      console.log('updateOAuthUser: API response data:', result)
+      
       if (!result.success) {
         throw new Error(result.error || 'Failed to update OAuth user')
       }
       
+      console.log('updateOAuthUser: Update successful')
       return result
     } catch (error) {
       console.error('Failed to update OAuth user:', error)
       throw error
     }
   }, [])
+
+  // Check if user is OAuth user (no custom user, has session)
+  const isOAuthUser = useCallback(() => {
+    return !customUser && !!session?.user
+  }, [customUser, session])
+
+  // Update user with logout confirmation for OAuth users
+  const updateUserWithConfirmation = useCallback(async (updates: UserUpdateData, showModal: (onConfirm: () => void) => void) => {
+    console.log('updateUserWithConfirmation called with:', { updates, isOAuth: isOAuthUser() })
+    
+    if (isOAuthUser()) {
+      console.log('Processing OAuth user update...')
+      // For OAuth users, update database first, then show logout modal
+      try {
+        await updateOAuthUser(updates)
+        console.log('OAuth user updated successfully, preparing modal...')
+        
+        // Show confirmation modal to logout
+        console.log('Calling showModal callback...')
+        showModal(() => {
+          console.log('Modal confirmed, logging out...')
+          logout()
+        })
+        console.log('showModal callback completed')
+      } catch (error) {
+        console.error('Error in OAuth user update:', error)
+        throw error
+      }
+    } else {
+      console.log('Processing credential user update...')
+      // For credential users, normal update
+      if (customUser) {
+        await updateUser({
+          ...customUser,
+          ...updates
+        })
+      }
+    }
+  }, [isOAuthUser, updateOAuthUser, logout, customUser, updateUser])
 
   // Separate theme update function to avoid any async operations
   const updateTheme = useCallback((newTheme: 'light' | 'dark' | 'system') => {
@@ -240,11 +285,13 @@ export function useIntegratedAuth() {
       isLoading: status === 'loading' || isAuthenticating,
       logout,
       updateUser: integratedUpdateUser,
+      updateUserWithConfirmation,
       updateTheme,
       refreshSession,
       login,
       register,
-      authType: activeAuth
+      authType: activeAuth,
+      isOAuthUser: isOAuthUser()
     }
-  }, [session, customUser, status, oauthUserOverrides, logout, integratedUpdateUser, updateTheme, refreshSession, login, register, isAuthenticating])
+  }, [session, customUser, status, oauthUserOverrides, logout, integratedUpdateUser, updateUserWithConfirmation, updateTheme, refreshSession, login, register, isAuthenticating, isOAuthUser])
 }

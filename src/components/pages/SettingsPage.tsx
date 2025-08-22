@@ -14,13 +14,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Settings, User, Save, Loader2, ArrowLeft, Key, Copy, RefreshCw, Eye, EyeOff } from 'lucide-react'
 import { LoginForm } from '@/components/forms'
+import { LogoutConfirmModal } from '@/components/common'
 
 export default function SettingsPage() {
   const { t, i18n } = useTranslation()
-  const { user, updateUser } = useIntegratedAuth()
+  const { user, updateUser, updateUserWithConfirmation, isOAuthUser } = useIntegratedAuth()
   const { theme, setTheme } = useTheme()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [pendingLogout, setPendingLogout] = useState<(() => void) | null>(null)
   const [apiToken, setApiToken] = useState<string | null>(null)
   const [isTokenVisible, setIsTokenVisible] = useState(false)
   const [isGeneratingToken, setIsGeneratingToken] = useState(false)
@@ -205,16 +208,28 @@ export default function SettingsPage() {
         setTheme(formData.theme)
       }
 
-      // Use the integrated updateUser function which handles both OAuth and credential users
-      await updateUser({
-        ...user,
+      const updateData = {
         displayName: formData.displayName,
         profileImage: formData.profileImage,
         language: formData.language,
         theme: formData.theme
-      })
+      }
 
-      toast.success(t('settings.notifications.saved'))
+      if (isOAuthUser) {
+        // For OAuth users, use the confirmation method
+        await updateUserWithConfirmation(updateData, (onConfirm) => {
+          setPendingLogout(onConfirm)
+          setShowLogoutModal(true)
+        })
+        toast.success(t('settings.notifications.saved'))
+      } else {
+        // For credential users, normal update
+        await updateUser({
+          ...user,
+          ...updateData
+        })
+        toast.success(t('settings.notifications.saved'))
+      }
     } catch (error) {
       console.error('Failed to save settings:', error)
       toast.error(t('settings.notifications.error'))
@@ -464,6 +479,24 @@ export default function SettingsPage() {
         </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmModal
+        isOpen={showLogoutModal}
+        onClose={() => {
+          setShowLogoutModal(false)
+          setPendingLogout(null)
+        }}
+        onConfirm={() => {
+          if (pendingLogout) {
+            pendingLogout()
+          }
+          setShowLogoutModal(false)
+          setPendingLogout(null)
+        }}
+        title={t('settings.confirmLogout.title')}
+        description={t('settings.confirmLogout.description')}
+      />
     </PageLayout>
   )
 }

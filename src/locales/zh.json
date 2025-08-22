@@ -187,6 +187,10 @@
     "notifications": {
       "saved": "設定保存成功！",
       "error": "保存設定失敗"
+    },
+    "confirmLogout": {
+      "title": "需要重新登入",
+      "description": "要應用顯示名稱或個人頭像的更改，您需要登出並重新登入。您的更改已保存到資料庫。"
     }
   },
   "common": {

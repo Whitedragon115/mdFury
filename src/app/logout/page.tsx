@@ -31,12 +31,12 @@ export default function LogoutPage() {
     }
   }, [session, customLogout])
 
-  // Auto-redirect to Home shortly after showing "done"
+  // Auto-redirect to Login page shortly after showing "done"
   useEffect(() => {
     if (step === 'done') {
       const timer = setTimeout(() => {
-        window.location.href = '/'
-      }, 1200)
+        window.location.href = '/login'
+      }, 500)
       return () => clearTimeout(timer)
     }
   }, [step])
@@ -51,7 +51,7 @@ export default function LogoutPage() {
       ) : (
         <div className="text-center">
           <div className="mx-auto mb-4 text-slate-200 text-xl">You have been signed out</div>
-          <p className="text-gray-400">Redirecting to Home...</p>
+          <p className="text-gray-400">Redirecting to Login...</p>
         </div>
       )}
     </div>

@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Slider } from '@/components/ui/slider'
+import { LogoutConfirmModal } from './LogoutConfirmModal'
 import { 
   Settings, 
   User, 
@@ -37,12 +38,14 @@ interface SettingsPanelProps {
 
 export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const { t, i18n } = useTranslation()
-  const { user, updateUser, updateTheme, authType } = useIntegratedAuth()
+  const { user, updateUser, updateUserWithConfirmation, updateTheme, authType, isOAuthUser } = useIntegratedAuth()
   const { theme, setTheme } = useTheme()
   const { setPreview, clearPreview } = useBackgroundPreview()
   const [activeCategory, setActiveCategory] = useState('profile')
-  const [ isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [hasInitialized, setHasInitialized] = useState(false) // Track if form has been initialized
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [pendingLogout, setPendingLogout] = useState<(() => void) | null>(null)
   const [apiToken, setApiToken] = useState<string | null>(null)
   const [isTokenVisible, setIsTokenVisible] = useState(false)
   const [isGeneratingToken, setIsGeneratingToken] = useState(false)
@@ -362,8 +365,7 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         updateTheme(formData.theme)
       }
 
-      // Persist non-theme profile fields
-      await updateUser({
+      const updateData = {
         displayName: formData.displayName,
         profileImage: formData.profileImage,
         language: formData.language,
@@ -371,9 +373,34 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         backgroundBlur: formData.backgroundBlur,
         backgroundBrightness: formData.backgroundBrightness,
         backgroundOpacity: formData.backgroundOpacity
-      })
+      }
 
-      toast.success(t('settings.notifications.saved'))
+      // Check if profile-related fields (displayName or profileImage) have changed
+      const profileChanged = (
+        formData.displayName !== user.displayName ||
+        formData.profileImage !== user.profileImage
+      )
+
+      console.log('SettingsPanel - isOAuthUser:', isOAuthUser)
+      console.log('SettingsPanel - profileChanged:', profileChanged)
+      console.log('SettingsPanel - updateData:', updateData)
+
+      if (isOAuthUser && profileChanged) {
+        console.log('Using OAuth update with confirmation modal (profile changed)')
+        // For OAuth users with profile changes, use the confirmation method
+        await updateUserWithConfirmation(updateData, (onConfirm) => {
+          console.log('Setting up logout modal from SettingsPanel')
+          setPendingLogout(() => onConfirm)
+          setShowLogoutModal(true)
+        })
+        toast.success(t('settings.notifications.saved'))
+      } else {
+        console.log('Using normal update (no profile changes or credential user)')
+        // For all other cases, normal update
+        await updateUser(updateData)
+        toast.success(t('settings.notifications.saved'))
+      }
+
       clearPreview() // Clear preview after successful save
     } catch (error) {
       console.error('Failed to save settings:', error)
@@ -830,6 +857,24 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Logout Confirmation Modal */}
+    <LogoutConfirmModal
+      isOpen={showLogoutModal}
+      onClose={() => {
+        setShowLogoutModal(false)
+        setPendingLogout(null)
+      }}
+      onConfirm={() => {
+        if (pendingLogout) {
+          pendingLogout()
+        }
+        setShowLogoutModal(false)
+        setPendingLogout(null)
+      }}
+      title={t('settings.confirmLogout.title')}
+      description={t('settings.confirmLogout.description')}
+    />
     </>
   )
 }
