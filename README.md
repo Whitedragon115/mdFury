@@ -1,5 +1,7 @@
 # mdFury — Modern Markdown Editor & Document Management
 
+> This is a Vibe Project, so the bugs goes brrrrr
+
 A modern Markdown editor built with Next.js 15, TypeScript, and Tailwind CSS, featuring live preview, document storage/sharing, dark/light/system themes, internationalization, and OAuth login (Google/GitHub).
 
 ## ✨ Features
