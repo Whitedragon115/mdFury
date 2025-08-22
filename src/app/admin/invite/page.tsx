@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Copy, Key, Shield, Plus, Clock, Users, CheckCircle, AlertCircle, History, RefreshCw, ArrowRight, TrendingUp, Search, Eye } from 'lucide-react'
+import { Copy, Key, Shield, Plus, Clock, CheckCircle, AlertCircle, History, RefreshCw, TrendingUp, Search, Eye } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 interface InviteCodeStats {
@@ -41,7 +41,7 @@ export default function InviteAdminPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'used' | 'expired'>('all')
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     if (!isAuthenticated) return
     
     setIsLoadingStats(true)
@@ -60,18 +60,18 @@ export default function InviteAdminPage() {
       } else {
         toast.error('Failed to fetch statistics')
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to fetch statistics')
     } finally {
       setIsLoadingStats(false)
     }
-  }
+  }, [isAuthenticated, inviteKey])
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchStats()
     }
-  }, [isAuthenticated])
+  }, [isAuthenticated, fetchStats])
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'Never'
@@ -132,7 +132,7 @@ export default function InviteAdminPage() {
       } else {
         toast.error('Invalid invite key')
       }
-    } catch (error) {
+  } catch (_error) {
       toast.error('Authentication failed')
     }
   }
@@ -159,7 +159,7 @@ export default function InviteAdminPage() {
       } else {
         toast.error(data.message || 'Failed to generate code')
       }
-    } catch (error) {
+  } catch (_error) {
       toast.error('Failed to generate invite code')
     } finally {
       setIsGenerating(false)

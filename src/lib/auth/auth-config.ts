@@ -23,7 +23,21 @@ interface NextAuthUser {
   backgroundOpacity?: number | null
 }
 
-type Tokenish = Record<string, unknown>
+// Shape we inject into the JWT token. Keep this in sync with assignments below.
+interface Tokenish {
+  id?: string
+  username?: string
+  displayName?: string | null
+  profileImage?: string | null
+  language?: string | null
+  theme?: 'light' | 'dark' | 'system' | null
+  backgroundImage?: string | null
+  backgroundBlur?: number | null
+  backgroundBrightness?: number | null
+  backgroundOpacity?: number | null
+  email?: string | null
+  [key: string]: unknown
+}
 
 export const authConfig: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -217,19 +231,19 @@ export const authConfig: NextAuthOptions = {
     async session({ session, token }) {
       
       if (token && session.user) {
-        const t = token as Tokenish
-        const sUser = session.user as NextAuthUser
-        sUser.id = t.id as string | undefined
-        sUser.username = t.username as string | undefined
-        sUser.displayName = t.displayName as string | undefined
-  sUser.profileImage = (t as any).profileImage as string | undefined
-  sUser.image = (t as any).profileImage as string | undefined
-        sUser.language = (t.language as string) || undefined
-        sUser.theme = (t.theme as 'light' | 'dark' | 'system') || undefined
-        sUser.backgroundImage = t.backgroundImage as string | undefined
-        sUser.backgroundBlur = (t.backgroundBlur as number) ?? undefined
-        sUser.backgroundBrightness = (t.backgroundBrightness as number) ?? undefined
-        sUser.backgroundOpacity = (t.backgroundOpacity as number) ?? undefined
+  const t = token as Tokenish
+  const sUser = session.user as NextAuthUser
+  sUser.id = t.id
+  sUser.username = t.username
+  sUser.displayName = t.displayName
+  sUser.profileImage = t.profileImage
+  sUser.image = t.profileImage
+  sUser.language = t.language
+  sUser.theme = t.theme
+  sUser.backgroundImage = t.backgroundImage
+  sUser.backgroundBlur = t.backgroundBlur ?? undefined
+  sUser.backgroundBrightness = t.backgroundBrightness ?? undefined
+  sUser.backgroundOpacity = t.backgroundOpacity ?? undefined
         
       }
       

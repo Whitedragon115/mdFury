@@ -116,7 +116,7 @@ export function useIntegratedAuth() {
   }, [customUser, session])
 
   // Update user with logout confirmation for OAuth users
-  const updateUserWithConfirmation = useCallback(async (updates: UserUpdateData, showModal: (onConfirm: () => void) => void) => {
+  const updateUserWithConfirmation = useCallback(async (updates: UserUpdateData, showModal: (_onConfirm: () => void) => void) => {
     console.log('updateUserWithConfirmation called with:', { updates, isOAuth: isOAuthUser() })
     
     if (isOAuthUser()) {
