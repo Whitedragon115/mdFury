@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  mdfury-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mdfury-app
+    ports:
+      - "4682:3000"
+    environment:
+      # Database Configuration
+      - DATABASE_URL=${DATABASE_URL}
+      
+      # NextAuth Configuration
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      
+      # OAuth Configuration
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      
+      # Application Configuration
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET}
+      - PUBLIC_MODE=${PUBLIC_MODE:-true}
+      - DISABLE_REGISTRATION=${DISABLE_REGISTRATION:-false}
+      - DISABLE_OAUTH_REGISTRATION=${DISABLE_OAUTH_REGISTRATION:-false}
+      - INVITE_KEY=${INVITE_KEY}
+    volumes:
+      # Optional: Mount for persistent uploads or logs
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/config/public-mode"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - mdfury-network
+
+networks:
+  mdfury-network:
+    driver: bridge
