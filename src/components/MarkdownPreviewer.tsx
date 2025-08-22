@@ -102,6 +102,7 @@ export default function MarkdownPreviewer({
   const [isClient, setIsClient] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [_isSaved, setIsSaved] = useState(false)
+  const [isPublicModeEnabled, setIsPublicModeEnabled] = useState(false)
   const isAuthenticated = !!user
 
   // Generate random bin ID
@@ -116,6 +117,8 @@ export default function MarkdownPreviewer({
 
   useEffect(() => {
     setIsClient(true)
+    // Check if public mode is enabled
+    IntegratedMarkdownService.isPublicModeEnabled().then(setIsPublicModeEnabled)
     // Don't generate initial bin ID - only when user clicks save
   }, [])
 
@@ -214,9 +217,18 @@ export default function MarkdownPreviewer({
   }
 
   const handleSave = async () => {
+    // Check if user is authenticated
     if (!user) {
-      toast.error(t('editor.notifications.loginRequired'))
-      return
+      // Check if public mode is enabled
+      const isPublicModeEnabled = await IntegratedMarkdownService.isPublicModeEnabled()
+      
+      if (!isPublicModeEnabled) {
+        toast.error(t('editor.notifications.loginRequired'))
+        return
+      }
+      
+      // Continue with anonymous save if public mode is enabled
+      return handleAnonymousSave()
     }
 
     if (!currentDocTitle.trim()) {
@@ -309,6 +321,64 @@ export default function MarkdownPreviewer({
         } else {
           toast.error(result.message || 'Failed to save document')
         }
+      }
+    } catch (_error) {
+      toast.error('Failed to save document')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleAnonymousSave = async () => {
+    if (!currentDocTitle.trim()) {
+      toast.error('Please enter a title for your document')
+      return
+    }
+
+    // Generate bin ID if not provided by user
+    let binId = currentBinId.trim()
+    if (!binId) {
+      binId = generateBinId()
+      setCurrentBinId(binId)
+    }
+
+    // Validate binId format
+    const validation = IntegratedMarkdownService.validateBinId(binId)
+    if (!validation.valid) {
+      toast.error(validation.message || 'Invalid bin ID format')
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      const saveData = {
+        title: currentDocTitle,
+        content: markdown,
+        tags: currentTags,
+        isPublic: true, // Anonymous documents are always public
+        binId: binId,
+        password: binPassword || undefined
+      }
+
+      const result = await IntegratedMarkdownService.saveAnonymousMarkdown(saveData)
+      
+      if (result.success && result.markdown) {
+        setCurrentDocId(result.markdown.id)
+        setCurrentBinId(result.markdown.binId || result.markdown.id)
+        // Redirect to the new bin page
+        const binId = result.markdown.binId || result.markdown.id
+        window.location.href = `/bin/${binId}`
+        
+        const previewUrl = `${window.location.origin}/bin/${binId}`
+        // Auto copy view link to clipboard
+        try {
+          await navigator.clipboard.writeText(previewUrl)
+          toast.success('Document saved! Link copied to clipboard.')
+        } catch (_err) {
+          toast.success('Document saved successfully!')
+        }
+      } else {
+        toast.error(result.message || 'Failed to save document')
       }
     } catch (_error) {
       toast.error('Failed to save document')
@@ -444,8 +514,8 @@ export default function MarkdownPreviewer({
           </div>
         </div>
 
-        {/* Bin Controls - Only show for authenticated users */}
-        {isAuthenticated && (
+        {/* Bin Controls - Show for authenticated users OR when public mode is enabled */}
+        {(isAuthenticated || isPublicModeEnabled) && (
           <div className="mt-4 mb-6">
             {/** 只有首頁（無 documentId）時顯示 binId 欄位 **/}
             { !documentId ? (
@@ -457,10 +527,11 @@ export default function MarkdownPreviewer({
                 hasPassword={!!binPassword}
                 password={binPassword}
                 isLoading={isSaving}
+                isAnonymous={!isAuthenticated}
                 onTitleChange={setCurrentDocTitle}
                 onBinIdChange={setCurrentBinId}
                 onTagsChange={setCurrentTags}
-                onPublicChange={setIsPublic}
+                onPublicChange={isAuthenticated ? setIsPublic : () => {}} // Anonymous users can't change privacy
                 onPasswordChange={setBinPassword}
                 onSave={handleSave}
                 onGenerateId={setGeneratedBinId}
@@ -474,9 +545,10 @@ export default function MarkdownPreviewer({
                 hasPassword={!!binPassword}
                 password={binPassword}
                 isLoading={isSaving}
+                isAnonymous={!isAuthenticated}
                 onTitleChange={setCurrentDocTitle}
                 onTagsChange={setCurrentTags}
-                onPublicChange={setIsPublic}
+                onPublicChange={isAuthenticated ? setIsPublic : () => {}} // Anonymous users can't change privacy
                 onPasswordChange={setBinPassword}
                 onSave={handleSave}
               />

@@ -54,10 +54,6 @@ export default function LoginForm({ redirectTo }: LoginFormProps) {
     }
   }
 
-  const handleDemoLogin = (username: string, password: string) => {
-    setCredentials({ username, password })
-  }
-
   //FEATURE
   const _isRegistrationDisabled = process.env.NODE_ENV === 'production' 
     ? false // In production, we'll fetch this from an API
@@ -180,31 +176,6 @@ export default function LoginForm({ redirectTo }: LoginFormProps) {
             >
               {t('auth.registerHere')}
             </a>
-          </div>
-        </Card>
-
-        {/* Demo Accounts */}
-        <Card className="p-4 bg-slate-800/30 backdrop-blur-sm border-slate-700">
-          <h3 className="font-medium text-slate-200 mb-3">{t('auth.demoAccounts')}</h3>
-          <div className="space-y-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full h-10 justify-start text-sm bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-600 hover:text-slate-100"
-              onClick={() => handleDemoLogin('admin', 'admin123')}
-            >
-              <span className="font-medium">{t('auth.adminDemo')}:</span>
-              <span className="ml-2 text-slate-400">admin / admin123</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full h-10 justify-start text-sm bg-slate-700/50 border-slate-600 text-slate-300 hover:bg-slate-600 hover:text-slate-100"
-              onClick={() => handleDemoLogin('demo', 'demo123')}
-            >
-              <span className="font-medium">{t('auth.userDemo')}:</span>
-              <span className="ml-2 text-slate-400">demo / demo123</span>
-            </Button>
           </div>
         </Card>
       </div>

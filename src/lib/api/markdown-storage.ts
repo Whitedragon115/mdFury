@@ -19,6 +19,7 @@ export interface CreateMarkdownData {
   content: string
   tags?: string[]
   isPublic?: boolean
+  isPrivate?: boolean  // For backward compatibility
   binId?: string
   password?: string
 }
@@ -153,7 +154,12 @@ export class MarkdownStorageService {
           content: data.content,
           tags: data.tags ? JSON.stringify(data.tags) : null,
           // If password is provided, force document to be public
-          isPublic: data.password ? true : (data.isPublic !== false), // Default to public
+          // Handle both isPublic and isPrivate for backward compatibility
+          isPublic: data.password ? true : (
+            data.isPublic !== undefined ? data.isPublic :
+            data.isPrivate !== undefined ? !data.isPrivate :
+            true // Default to public
+          ),
           password: data.password || null
         }
       })

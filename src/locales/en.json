@@ -139,6 +139,19 @@
     },
     "save": "Save Changes",
     "cancel": "Cancel",
+    "api": {
+      "title": "API Access",
+      "description": "Generate an API token to access mdFury programmatically. Keep your token secure and don't share it with others.",
+      "token": "API Token",
+      "noToken": "No API token generated yet. Generate one to access the API.",
+      "generate": "Generate API Token",
+      "regenerate": "Regenerate Token",
+      "tokenGenerated": "API token generated successfully!",
+      "tokenRegenerated": "API token regenerated successfully!",
+      "tokenCopied": "API token copied to clipboard!",
+      "tokenError": "Failed to generate API token",
+      "copyError": "Failed to copy token to clipboard"
+    },
     "notifications": {
       "saved": "Settings saved successfully!",
       "error": "Failed to save settings"

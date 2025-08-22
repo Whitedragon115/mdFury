@@ -268,7 +268,40 @@ export class AuthService {
   }
 
   static getUserByToken(token: string): Promise<User | null> {
+    // Check if it's an API token (starts with 'mdf_') or session token
+    if (token.startsWith('mdf_')) {
+      return this.getUserByApiToken(token)
+    }
     return this.verifyToken(token)
+  }
+
+  static async getUserByApiToken(apiToken: string): Promise<User | null> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { apiToken }
+      })
+
+      if (!user) {
+        return null
+      }
+
+      return {
+        id: user.id,
+        username: user.username || '',
+        email: user.email || '',
+        displayName: user.displayName || user.username || '',
+        profileImage: user.profileImage || '',
+        language: user.language || 'en',
+        theme: (user.theme as 'light' | 'dark' | 'system') || 'dark',
+        backgroundImage: user.backgroundImage || '',
+        backgroundBlur: user.backgroundBlur || 0,
+        backgroundBrightness: user.backgroundBrightness || DEFAULT_BACKGROUND_BRIGHTNESS,
+        backgroundOpacity: user.backgroundOpacity || DEFAULT_BACKGROUND_OPACITY
+      }
+    } catch (error) {
+      console.error('API token verification error:', error)
+      return null
+    }
   }
 
   static async updateUserProfile(userId: string, updates: Partial<Omit<User, 'id' | 'username' | 'email'>>): Promise<{ success: boolean; user?: User; token?: string; message?: string }> {
@@ -359,6 +392,35 @@ export class AuthService {
       }
     } catch (error) {
       console.error('Failed to get user by ID:', error)
+      return null
+    }
+  }
+
+  static async getUserByEmail(email: string): Promise<User | null> {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { email: email }
+      })
+
+      if (!user) {
+        return null
+      }
+
+      return {
+        id: user.id,
+        username: user.username || '',
+        email: user.email || '',
+        displayName: user.displayName || user.username || '',
+        profileImage: user.profileImage || '',
+        language: user.language || 'en',
+        theme: (user.theme as 'light' | 'dark' | 'system') || 'system',
+        backgroundImage: user.backgroundImage || '',
+        backgroundBlur: user.backgroundBlur || 0,
+        backgroundBrightness: user.backgroundBrightness || DEFAULT_BACKGROUND_BRIGHTNESS,
+        backgroundOpacity: user.backgroundOpacity || DEFAULT_BACKGROUND_OPACITY
+      }
+    } catch (error) {
+      console.error('Failed to get user by email:', error)
       return null
     }
   }

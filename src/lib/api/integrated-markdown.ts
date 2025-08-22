@@ -74,6 +74,57 @@ export class IntegratedMarkdownService {
   }
 
   /**
+   * Save anonymous markdown (for public mode)
+   */
+  static async saveAnonymousMarkdown(data: CreateMarkdownData): Promise<{ success: boolean; markdown?: SavedMarkdown; message?: string }> {
+    try {
+      const response = await fetch('/api/markdowns/anonymous', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+
+      const result = await response.json()
+      
+      if (result.success && result.markdown) {
+        return {
+          ...result,
+          markdown: {
+            ...result.markdown,
+            createdAt: typeof result.markdown.createdAt === 'string' ? new Date(result.markdown.createdAt) : result.markdown.createdAt,
+            updatedAt: typeof result.markdown.updatedAt === 'string' ? new Date(result.markdown.updatedAt) : result.markdown.updatedAt,
+          }
+        }
+      }
+      
+      return result
+    } catch (error) {
+      console.error('Failed to save anonymous markdown:', error)
+      return {
+        success: false,
+        message: 'Failed to save document'
+      }
+    }
+  }
+
+  /**
+   * Check if public mode is enabled
+   */
+  static async isPublicModeEnabled(): Promise<boolean> {
+    try {
+      // We'll create a simple endpoint to check if public mode is enabled
+      const response = await fetch('/api/config/public-mode')
+      const data = await response.json()
+      return data.enabled === true
+    } catch (_error) {
+      // Default to false if we can't determine the setting
+      return false
+    }
+  }
+
+  /**
    * Update markdown using the appropriate API
    */
   static async updateMarkdown(id: string, data: UpdateMarkdownData): Promise<{ success: boolean; markdown?: SavedMarkdown; message?: string }> {

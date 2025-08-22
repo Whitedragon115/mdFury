@@ -139,6 +139,19 @@
     },
     "save": "保存更改",
     "cancel": "取消",
+    "api": {
+      "title": "API 訪問",
+      "description": "生成 API 令牌以程式化方式訪問 mdFury。請保護您的令牌安全，不要與他人分享。",
+      "token": "API 令牌",
+      "noToken": "尚未生成 API 令牌。生成一個以訪問 API。",
+      "generate": "生成 API 令牌",
+      "regenerate": "重新生成令牌",
+      "tokenGenerated": "API 令牌生成成功！",
+      "tokenRegenerated": "API 令牌重新生成成功！",
+      "tokenCopied": "API 令牌已複製到剪貼板！",
+      "tokenError": "生成 API 令牌失敗",
+      "copyError": "複製令牌到剪貼板失敗"
+    },
     "notifications": {
       "saved": "設定保存成功！",
       "error": "保存設定失敗"

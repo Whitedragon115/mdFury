@@ -26,6 +26,7 @@ model User {
   backgroundBlur       Int        @default(0)
   backgroundBrightness Int        @default(70)
   backgroundOpacity    Float      @default(0.1)
+  apiToken             String?    @unique // API token for API access
   createdAt            DateTime   @default(now())
   lastLogin            DateTime   @default(now())
   updatedAt            DateTime   @updatedAt

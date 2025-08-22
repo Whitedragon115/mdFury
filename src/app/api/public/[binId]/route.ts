@@ -1,16 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { MarkdownStorageService } from '@/lib/api/markdown-storage'
 import { AuthService } from '@/lib/auth/index'
+import { getServerSession } from 'next-auth'
+import { authConfig } from '@/lib/auth/auth-config'
 
-async function getUserFromToken(request: NextRequest) {
+async function getUserFromAuth(request: NextRequest) {
+  // First try to get user from Bearer token (credential authentication)
   const authHeader = request.headers.get('authorization')
   const token = authHeader?.replace('Bearer ', '')
   
-  if (!token) {
-    return null
+  if (token) {
+    const user = await AuthService.getUserByToken(token)
+    if (user) {
+      return user
+    }
   }
   
-  return await AuthService.getUserByToken(token)
+  // If no token or token invalid, try to get user from NextAuth session (OAuth)
+  try {
+    const session = await getServerSession(authConfig)
+    if (session?.user?.email) {
+      // Get full user data from database using the session user email
+      const user = await AuthService.getUserByEmail(session.user.email)
+      return user
+    }
+  } catch (error) {
+    console.error('Failed to get session:', error)
+  }
+  
+  return null
 }
 
 export async function GET(
@@ -23,7 +41,7 @@ export async function GET(
     const password = url.searchParams.get('password')
     
     // Get user from token if provided
-    const user = await getUserFromToken(request)
+    const user = await getUserFromAuth(request)
     const result = await MarkdownStorageService.getPublicMarkdown(
       binId, 
       password || undefined,

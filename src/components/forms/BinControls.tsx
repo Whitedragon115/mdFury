@@ -27,6 +27,7 @@ interface BinControlsProps {
   hasPassword: boolean
   password: string
   isLoading: boolean
+  isAnonymous?: boolean // 新增：指示是否為匿名用戶
   onTitleChange: (_title: string) => void
   onBinIdChange?: (_binId: string) => void // 變成可選
   onTagsChange: (_tags: string[]) => void
@@ -45,6 +46,7 @@ export default function BinControls({
   hasPassword,
   password,
   isLoading,
+  isAnonymous = false,
   onTitleChange,
   onBinIdChange,
   onTagsChange,
@@ -145,29 +147,40 @@ export default function BinControls({
             className="h-8 text-sm flex-1 bg-white/90 dark:bg-slate-800"
           />
         </div>        <div className="flex items-center justify-end gap-3">
-          {/* Public/Private Toggle */}
-          <div className="relative">            <Button
-              variant={isPublic ? "default" : "outline"}
-              size="sm"
-              onClick={() => handlePublicChange(!isPublic)}
-              className={`h-8 px-3 ${!isPublic && currentlyHasPassword ? 'opacity-50 cursor-not-allowed' : ''}`}
-              disabled={!isPublic && currentlyHasPassword ? true : false}
-              title={currentlyHasPassword && !isPublic ? 'Cannot make password-protected document private' : ''}
-            >
-              {isPublic ? (
-                <>
-                  <Eye className="w-3 h-3 mr-1" />
-                  Public
-                </>
-              ) : (
-                <>
-                  <EyeOff className="w-3 h-3 mr-1" />
-                  Private
-                </>
-              )}
-            </Button>
-            {/* 移除警告文字 */}
-          </div>
+          {/* Public/Private Toggle - Hide for anonymous users */}
+          {!isAnonymous && (
+            <div className="relative">
+              <Button
+                variant={isPublic ? "default" : "outline"}
+                size="sm"
+                onClick={() => handlePublicChange(!isPublic)}
+                className={`h-8 px-3 ${!isPublic && currentlyHasPassword ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={!isPublic && currentlyHasPassword ? true : false}
+                title={currentlyHasPassword && !isPublic ? 'Cannot make password-protected document private' : ''}
+              >
+                {isPublic ? (
+                  <>
+                    <Eye className="w-3 h-3 mr-1" />
+                    Public
+                  </>
+                ) : (
+                  <>
+                    <EyeOff className="w-3 h-3 mr-1" />
+                    Private
+                  </>
+                )}
+              </Button>
+              {/* 移除警告文字 */}
+            </div>
+          )}
+
+          {/* Show anonymous note for anonymous users */}
+          {isAnonymous && (
+            <div className="text-xs text-slate-600 dark:text-slate-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">
+              <Eye className="w-3 h-3 inline mr-1" />
+              Anonymous documents are always public
+            </div>
+          )}
 
           {/* Password Protection */}
           <div className="flex items-center gap-2">

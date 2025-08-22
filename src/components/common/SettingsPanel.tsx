@@ -21,7 +21,12 @@ import {
   Sun,
   Moon,
   Save,
-  Loader2
+  Loader2,
+  Key,
+  Copy,
+  RefreshCw,
+  Eye,
+  EyeOff
 } from 'lucide-react'
 
 interface SettingsPanelProps {
@@ -37,6 +42,9 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
   const [activeCategory, setActiveCategory] = useState('profile')
   const [isLoading, setIsLoading] = useState(false)
   const [hasInitialized, setHasInitialized] = useState(false) // Track if form has been initialized
+  const [apiToken, setApiToken] = useState<string | null>(null)
+  const [isTokenVisible, setIsTokenVisible] = useState(false)
+  const [isGeneratingToken, setIsGeneratingToken] = useState(false)
   const [formData, setFormData] = useState({
     displayName: '',
     email: '',
@@ -65,6 +73,8 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         backgroundOpacity: user.backgroundOpacity ?? 0.1
       })
       setHasInitialized(true)
+      // Load API token when user is loaded
+      loadApiToken()
     }
   }, [user, theme, hasInitialized])
 
@@ -113,11 +123,145 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
 
   if (!user) return null
 
+  const loadApiToken = async () => {
+    if (!user) return
+    
+    try {
+      // Check if user is using OAuth
+      const { getSession } = await import('next-auth/react')
+      const session = await getSession()
+      
+      let response
+      if (session?.user) {
+        // OAuth user - use session-based authentication
+        response = await fetch('/api/auth/token', {
+          method: 'GET',
+        })
+      } else {
+        // Credential user - use Bearer token
+        response = await fetch('/api/auth/token', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          },
+        })
+      }
+      
+      if (response.ok) {
+        const data = await response.json()
+        setApiToken(data.token || null)
+      }
+    } catch (error) {
+      console.error('Failed to load API token:', error)
+    }
+  }
+
+  const generateApiToken = async () => {
+    if (!user) return
+    
+    setIsGeneratingToken(true)
+    try {
+      // Check if user is using OAuth
+      const { getSession } = await import('next-auth/react')
+      const session = await getSession()
+      
+      let response
+      if (session?.user) {
+        // OAuth user - use session-based authentication
+        response = await fetch('/api/auth/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+      } else {
+        // Credential user - use Bearer token
+        response = await fetch('/api/auth/token', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+            'Content-Type': 'application/json',
+          },
+        })
+      }
+      
+      if (response.ok) {
+        const data = await response.json()
+        setApiToken(data.token)
+        toast.success(t('settings.api.tokenGenerated'))
+      } else {
+        throw new Error('Failed to generate token')
+      }
+    } catch (error) {
+      console.error('Failed to generate API token:', error)
+      toast.error(t('settings.api.tokenError'))
+    } finally {
+      setIsGeneratingToken(false)
+    }
+  }
+
+  const regenerateApiToken = async () => {
+    if (!user) return
+    
+    setIsGeneratingToken(true)
+    try {
+      // Check if user is using OAuth
+      const { getSession } = await import('next-auth/react')
+      const session = await getSession()
+      
+      let response
+      if (session?.user) {
+        // OAuth user - use session-based authentication
+        response = await fetch('/api/auth/token', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+      } else {
+        // Credential user - use Bearer token
+        response = await fetch('/api/auth/token', {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+            'Content-Type': 'application/json',
+          },
+        })
+      }
+      
+      if (response.ok) {
+        const data = await response.json()
+        setApiToken(data.token)
+        toast.success(t('settings.api.tokenRegenerated'))
+      } else {
+        throw new Error('Failed to regenerate token')
+      }
+    } catch (error) {
+      console.error('Failed to regenerate API token:', error)
+      toast.error(t('settings.api.tokenError'))
+    } finally {
+      setIsGeneratingToken(false)
+    }
+  }
+
+  const copyApiToken = async () => {
+    if (!apiToken) return
+    
+    try {
+      await navigator.clipboard.writeText(apiToken)
+      toast.success(t('settings.api.tokenCopied'))
+    } catch (error) {
+      console.error('Failed to copy token:', error)
+      toast.error(t('settings.api.copyError'))
+    }
+  }
+
   const categories = [
     { id: 'profile', label: t('settings.profile'), icon: User },
     { id: 'appearance', label: t('settings.appearance'), icon: Palette },
     { id: 'language', label: t('settings.language'), icon: Globe },
-    { id: 'background', label: t('settings.background'), icon: ImageIcon }
+    { id: 'background', label: t('settings.background'), icon: ImageIcon },
+    { id: 'api', label: t('settings.api.title'), icon: Key }
   ]
 
   const handleSave = async () => {
@@ -328,6 +472,84 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
     </div>
   )
 
+  const renderApiSettings = () => (
+    <div className="space-y-6">
+      <div>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+          {t('settings.api.description')}
+        </p>
+        
+        {apiToken ? (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-slate-700 dark:text-slate-300 font-medium">
+                {t('settings.api.token')}
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  type={isTokenVisible ? 'text' : 'password'}
+                  value={apiToken}
+                  readOnly
+                  className="flex-1 font-mono text-sm bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-600"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsTokenVisible(!isTokenVisible)}
+                  className="px-3"
+                >
+                  {isTokenVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={copyApiToken}
+                  className="px-3"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={regenerateApiToken}
+                disabled={isGeneratingToken}
+                className="flex items-center gap-2"
+              >
+                {isGeneratingToken ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-4 h-4" />
+                )}
+                {t('settings.api.regenerate')}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              {t('settings.api.noToken')}
+            </p>
+            <Button
+              onClick={generateApiToken}
+              disabled={isGeneratingToken}
+              className="bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 flex items-center gap-2"
+            >
+              {isGeneratingToken ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Key className="w-4 h-4" />
+              )}
+              {t('settings.api.generate')}
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
   const renderContent = () => {
     switch (activeCategory) {
       case 'profile':
@@ -338,6 +560,8 @@ export default function SettingsPanel({ isOpen, onClose }: SettingsPanelProps) {
         return renderLanguageSettings()
       case 'background':
         return renderBackgroundSettings()
+      case 'api':
+        return renderApiSettings()
       default:
         return renderProfileSettings()
     }

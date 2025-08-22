@@ -65,6 +65,15 @@ export async function PUT(
     
     const result = await MarkdownStorageService.updateMarkdown(id, user.id, data)
     
+    if (!result.success) {
+      // If the document was not found or access denied, return 404
+      if (result.message?.includes('not found') || result.message?.includes('access denied')) {
+        return NextResponse.json(result, { status: 404 })
+      }
+      // For other errors, return 400
+      return NextResponse.json(result, { status: 400 })
+    }
+    
     return NextResponse.json(result)
   } catch (error) {
     console.error('Update markdown API error:', error)
@@ -92,6 +101,10 @@ export async function DELETE(
     const { id } = await params
     
     const result = await MarkdownStorageService.deleteMarkdown(id, user.id)
+    
+    if (!result.success) {
+      return NextResponse.json(result, { status: 404 })
+    }
     
     return NextResponse.json(result)
   } catch (error) {
