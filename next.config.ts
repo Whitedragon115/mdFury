@@ -5,7 +5,8 @@ const nextConfig: NextConfig = {
     domains: [
       'lh3.googleusercontent.com',
       'avatars.githubusercontent.com',
-      'secure.gravatar.com'
+      'secure.gravatar.com',
+      'file.fury.tw'
     ]
   }
 };

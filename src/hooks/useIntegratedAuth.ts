@@ -56,6 +56,7 @@ export function useIntegratedAuth() {
     login, 
     register, 
     isLoading: _customLoading,
+    isAuthenticating,
     oauthUserOverrides,
     setOAuthUserOverrides
   } = useAuth()
@@ -163,9 +164,11 @@ export function useIntegratedAuth() {
             ...customUser,
             ...payload
           })
-        } else if (session) {
-          // For OAuth users, persist other fields using their API
-          await updateOAuthUser(payload as UserUpdateData)
+  } else if (session) {
+    // For OAuth users, persist other fields using their API
+    await updateOAuthUser(payload as UserUpdateData)
+    // Note: Skip refreshSession to prevent page refresh
+    // Rely on optimistic updates via oauthUserOverrides instead
         }
       }
     } catch (error) {
@@ -210,11 +213,11 @@ export function useIntegratedAuth() {
         backgroundOpacity: sUser.backgroundOpacity ?? 0.1
       }
       
-      // For OAuth users, only apply overrides for specific fields (like theme)
-      // Don't override core identity fields like displayName, username, email from session
+      // For OAuth users, apply overrides for most fields including identity
+      // Allow optimistic updates for displayName and profileImage
       const filteredOverrides = Object.fromEntries(
         Object.entries(oauthUserOverrides).filter(([key]) => 
-          ['theme', 'language', 'backgroundImage', 'backgroundBlur', 'backgroundBrightness', 'backgroundOpacity'].includes(key)
+          ['theme', 'language', 'displayName', 'profileImage', 'backgroundImage', 'backgroundBlur', 'backgroundBrightness', 'backgroundOpacity'].includes(key)
         )
       )
       
@@ -234,7 +237,7 @@ export function useIntegratedAuth() {
     return {
       user,
       isAuthenticated,
-      isLoading: status === 'loading',
+      isLoading: status === 'loading' || isAuthenticating,
       logout,
       updateUser: integratedUpdateUser,
       updateTheme,
@@ -243,5 +246,5 @@ export function useIntegratedAuth() {
       register,
       authType: activeAuth
     }
-  }, [session, customUser, status, oauthUserOverrides, logout, integratedUpdateUser, updateTheme, refreshSession, login, register])
+  }, [session, customUser, status, oauthUserOverrides, logout, integratedUpdateUser, updateTheme, refreshSession, login, register, isAuthenticating])
 }

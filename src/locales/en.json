@@ -13,6 +13,7 @@
     "confirmPassword": "Confirm Password",
     "confirmPasswordPlaceholder": "Confirm your password",
     "loginButton": "Login",
+    "signingIn": "Signing in",
     "register": "Create Account",
     "registering": "Creating Account...",
     "loginError": "Invalid username or password",
@@ -116,6 +117,7 @@
   "settings": {
     "title": "Settings",
     "profile": "Profile",
+    "account": "Account",
     "preferences": "Preferences",
     "appearance": "Appearance",
     "language": "Language",
@@ -139,6 +141,10 @@
     },
     "save": "Save Changes",
     "cancel": "Cancel",
+    "accountSettings": {
+      "oauthOnly": "OAuth Account",
+      "oauthDescription": "Account settings are managed by your OAuth provider (Google/GitHub). Password and email changes are not available for OAuth accounts."
+    },
     "api": {
       "title": "API Access",
       "description": "Generate an API token to access mdFury programmatically. Keep your token secure and don't share it with others.",
@@ -151,6 +157,30 @@
       "tokenCopied": "API token copied to clipboard!",
       "tokenError": "Failed to generate API token",
       "copyError": "Failed to copy token to clipboard"
+    },
+    "password": {
+      "changeTitle": "Change Password",
+      "current": "Current Password",
+      "currentPlaceholder": "Enter current password",
+      "new": "New Password",
+      "newPlaceholder": "Enter new password",
+      "confirm": "Confirm New Password",
+      "confirmPlaceholder": "Confirm new password",
+      "change": "Change Password",
+      "allFieldsRequired": "All password fields are required",
+      "passwordMismatch": "New passwords do not match",
+      "passwordTooShort": "Password must be at least 6 characters",
+      "success": "Password changed successfully!",
+      "error": "Failed to change password"
+    },
+    "emailChange": {
+      "changeTitle": "Change Email Address",
+      "newEmail": "New Email",
+      "newEmailPlaceholder": "Enter new email address",
+      "change": "Change Email",
+      "invalidEmail": "Please enter a valid email address",
+      "success": "Email changed successfully!",
+      "error": "Failed to change email"
     },
     "notifications": {
       "saved": "Settings saved successfully!",

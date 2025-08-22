@@ -13,6 +13,7 @@
     "confirmPassword": "確認密碼",
     "confirmPasswordPlaceholder": "確認您的密碼",
     "loginButton": "登入",
+    "signingIn": "登入中",
     "register": "創建帳戶",
     "registering": "正在創建帳戶...",
     "loginError": "用戶名或密碼無效",
@@ -116,6 +117,7 @@
   "settings": {
     "title": "設定",
     "profile": "個人資料",
+    "account": "帳戶",
     "preferences": "偏好設定",
     "appearance": "外觀",
     "language": "語言",
@@ -139,6 +141,10 @@
     },
     "save": "保存更改",
     "cancel": "取消",
+    "accountSettings": {
+      "oauthOnly": "OAuth 帳戶",
+      "oauthDescription": "帳戶設定由您的 OAuth 提供商（Google/GitHub）管理。OAuth 帳戶無法更改密碼和電子郵件。"
+    },
     "api": {
       "title": "API 訪問",
       "description": "生成 API 令牌以程式化方式訪問 mdFury。請保護您的令牌安全，不要與他人分享。",
@@ -151,6 +157,30 @@
       "tokenCopied": "API 令牌已複製到剪貼板！",
       "tokenError": "生成 API 令牌失敗",
       "copyError": "複製令牌到剪貼板失敗"
+    },
+    "password": {
+      "changeTitle": "修改密碼",
+      "current": "當前密碼",
+      "currentPlaceholder": "輸入當前密碼",
+      "new": "新密碼",
+      "newPlaceholder": "輸入新密碼",
+      "confirm": "確認新密碼",
+      "confirmPlaceholder": "確認新密碼",
+      "change": "修改密碼",
+      "allFieldsRequired": "所有密碼欄位都是必填的",
+      "passwordMismatch": "新密碼不一致",
+      "passwordTooShort": "密碼必須至少 6 個字符",
+      "success": "密碼修改成功！",
+      "error": "修改密碼失敗"
+    },
+    "emailChange": {
+      "changeTitle": "修改電子郵件地址",
+      "newEmail": "新電子郵件",
+      "newEmailPlaceholder": "輸入新電子郵件地址",
+      "change": "修改電子郵件",
+      "invalidEmail": "請輸入有效的電子郵件地址",
+      "success": "電子郵件修改成功！",
+      "error": "修改電子郵件失敗"
     },
     "notifications": {
       "saved": "設定保存成功！",

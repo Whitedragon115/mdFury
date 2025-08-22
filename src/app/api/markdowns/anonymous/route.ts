@@ -23,15 +23,14 @@ export async function POST(request: NextRequest) {
       )
     }
     
-    // Force public mode requirements for anonymous markdowns
     const anonymousMarkdownData = {
-      ...data,
-      isPublic: true, // Always public for anonymous markdowns
-      userId: null, // No user association
-      tags: data.tags || [], // Default to empty array if no tags
+      title: data.title,
+      content: data.content,
+      tags: data.tags || [],
+      isPublic: true,
+      password: data.password || undefined
     }
-    
-    // Validate that password-protected documents are public (redundant but safe)
+
     if (anonymousMarkdownData.password && anonymousMarkdownData.isPublic === false) {
       return NextResponse.json(
         { success: false, message: 'Password-protected documents must be public' },

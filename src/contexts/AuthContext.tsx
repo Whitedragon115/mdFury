@@ -17,6 +17,7 @@ interface UserUpdateData {
 interface AuthContextType {
   user: User | null
   isLoading: boolean
+  isAuthenticating: boolean // New state for login/register operations
   login: (_credentials: LoginCredentials) => Promise<AuthResponse>
   register: (_credentials: RegisterCredentials) => Promise<AuthResponse>
   logout: () => void
@@ -32,6 +33,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isAuthenticating, setIsAuthenticating] = useState(false) // New state for login/register
   // OAuth user overrides for immediate UI updates without session refresh
   // Load from localStorage on initialization
   const [oauthUserOverrides, setOAuthUserOverridesState] = useState<Partial<UserUpdateData>>(() => {
@@ -91,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const login = useCallback(async (credentials: LoginCredentials): Promise<AuthResponse> => {
+    setIsAuthenticating(true)
     try {
       const response = await ClientAuthService.login(credentials)
       
@@ -113,10 +116,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         success: false,
         message: 'Login failed'
       }
+    } finally {
+      setIsAuthenticating(false)
     }
   }, [])
 
   const register = useCallback(async (credentials: RegisterCredentials): Promise<AuthResponse> => {
+    setIsAuthenticating(true)
     try {
       const response = await ClientAuthService.register(credentials)
       
@@ -139,6 +145,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         success: false,
         message: 'Registration failed'
       }
+    } finally {
+      setIsAuthenticating(false)
     }
   }, [])
 
@@ -180,6 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider value={{
       user,
       isLoading,
+      isAuthenticating,
       login,
       register,
       logout,

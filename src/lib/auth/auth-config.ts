@@ -13,6 +13,7 @@ interface NextAuthUser {
   name?: string | null
   email?: string | null
   image?: string | null
+  profileImage?: string | null
   displayName?: string | null
   language?: string | null
   theme?: 'light' | 'dark' | 'system' | null
@@ -122,6 +123,7 @@ export const authConfig: NextAuthOptions = {
           token.id = dbUser.id
           token.username = dbUser.username
           token.displayName = dbUser.displayName || dbUser.name
+          token.profileImage = dbUser.profileImage || dbUser.image
           token.language = dbUser.language
           token.theme = dbUser.theme
           token.backgroundImage = dbUser.backgroundImage
@@ -174,10 +176,12 @@ export const authConfig: NextAuthOptions = {
               token.id = updatedDbUser.id
               token.username = updatedDbUser.username
               token.displayName = updatedDbUser.displayName || updatedDbUser.name
+              token.profileImage = updatedDbUser.profileImage || updatedDbUser.image
             } else {
               token.id = dbUser.id
               token.username = dbUser.username
               token.displayName = dbUser.displayName || dbUser.name
+              token.profileImage = dbUser.profileImage || dbUser.image
             }
             
             token.language = dbUser.language
@@ -194,6 +198,7 @@ export const authConfig: NextAuthOptions = {
           t.id = pUser.id
           t.username = pUser.username
           t.displayName = pUser.displayName
+          t.profileImage = pUser.profileImage || pUser.image
           t.language = pUser.language || 'en'
           t.theme = pUser.theme || 'dark'
           t.backgroundImage = pUser.backgroundImage
@@ -215,6 +220,8 @@ export const authConfig: NextAuthOptions = {
         sUser.id = t.id as string | undefined
         sUser.username = t.username as string | undefined
         sUser.displayName = t.displayName as string | undefined
+  sUser.profileImage = (t as any).profileImage as string | undefined
+  sUser.image = (t as any).profileImage as string | undefined
         sUser.language = (t.language as string) || undefined
         sUser.theme = (t.theme as 'light' | 'dark' | 'system') || undefined
         sUser.backgroundImage = t.backgroundImage as string | undefined

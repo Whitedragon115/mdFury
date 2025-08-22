@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useTranslation } from 'react-i18next'
@@ -33,6 +33,29 @@ export default function SettingsPage() {
   })
   const [imageVisible, setImageVisible] = useState(true)
 
+  const loadApiToken = useCallback(async () => {
+    if (!user) return
+    try {
+      const { getSession } = await import('next-auth/react')
+      const session = await getSession()
+      let response
+      if (session?.user) {
+        response = await fetch('/api/auth/token', { method: 'GET' })
+      } else {
+        response = await fetch('/api/auth/token', {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+        })
+      }
+      if (response.ok) {
+        const data = await response.json()
+        setApiToken(data.token || null)
+      }
+    } catch (error) {
+      console.error('Failed to load API token:', error)
+    }
+  }, [user])
+
   useEffect(() => {
     if (user) {
       setFormData({
@@ -50,45 +73,13 @@ export default function SettingsPage() {
       document.documentElement.classList.remove('light')
       setFormData(prev => ({ ...prev, theme: 'dark' }))
     }
-  }, [user, theme])
+  }, [user, theme, loadApiToken])
 
   // Reset image visibility when profile image URL changes
   useEffect(() => {
     setImageVisible(true)
   }, [formData.profileImage])
 
-  const loadApiToken = async () => {
-    if (!user) return
-    
-    try {
-      // Check if user is using OAuth
-      const { getSession } = await import('next-auth/react')
-      const session = await getSession()
-      
-      let response
-      if (session?.user) {
-        // OAuth user - use session-based authentication
-        response = await fetch('/api/auth/token', {
-          method: 'GET',
-        })
-      } else {
-        // Credential user - use Bearer token
-        response = await fetch('/api/auth/token', {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          },
-        })
-      }
-      
-      if (response.ok) {
-        const data = await response.json()
-        setApiToken(data.token || null)
-      }
-    } catch (error) {
-      console.error('Failed to load API token:', error)
-    }
-  }
 
   const generateApiToken = async () => {
     if (!user) return

@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
 import { LanguageSwitcher } from '@/components/common'
-import { FileText, LogIn, Eye, EyeOff } from 'lucide-react'
+import { FileText, LogIn, Eye, EyeOff, Loader2 } from 'lucide-react'
 import OAuthButtons from './OAuthButtons'
 
 interface LoginFormProps {
@@ -135,13 +135,17 @@ export default function LoginForm({ redirectTo }: LoginFormProps) {
 
             <Button 
               type="submit" 
-              className="w-full h-10 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 hover:cursor-pointer"
+              className={`w-full h-10 transition-all duration-200 ${
+                isLoading 
+                  ? 'bg-slate-600 hover:bg-slate-600 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 hover:cursor-pointer'
+              }`}
               disabled={isLoading}
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">
-                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                  {t('auth.loginButton')}...
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {t('auth.signingIn')}...
                 </div>
               ) : (
                 <>

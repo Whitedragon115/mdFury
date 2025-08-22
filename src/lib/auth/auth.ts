@@ -461,4 +461,61 @@ export class AuthService {
       console.warn('Failed to create demo users:', error)
     }
   }
+
+  static async updateUserPassword(userId: string, hashedPassword: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { 
+          password: hashedPassword,
+          updatedAt: new Date()
+        }
+      })
+
+      return { success: true }
+    } catch (error) {
+      console.error('Failed to update password:', error)
+      return { success: false, error: 'Failed to update password' }
+    }
+  }
+
+  static async updateUserEmail(userId: string, newEmail: string): Promise<{ success: boolean; error?: string; user?: User }> {
+    try {
+      // Check if email already exists
+      const existingUser = await prisma.user.findUnique({
+        where: { email: newEmail }
+      })
+
+      if (existingUser && existingUser.id !== userId) {
+        return { success: false, error: 'Email already exists' }
+      }
+
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: { 
+          email: newEmail,
+          updatedAt: new Date()
+        }
+      })
+
+      const userResponse: User = {
+        id: updatedUser.id,
+        username: updatedUser.username || '',
+        email: updatedUser.email || '',
+        displayName: updatedUser.displayName || updatedUser.username || '',
+        profileImage: updatedUser.profileImage || '',
+        language: updatedUser.language || 'en',
+        theme: (updatedUser.theme as 'light' | 'dark' | 'system') || 'system',
+        backgroundImage: updatedUser.backgroundImage || '',
+        backgroundBlur: updatedUser.backgroundBlur || 0,
+        backgroundBrightness: updatedUser.backgroundBrightness || DEFAULT_BACKGROUND_BRIGHTNESS,
+        backgroundOpacity: updatedUser.backgroundOpacity || DEFAULT_BACKGROUND_OPACITY
+      }
+
+      return { success: true, user: userResponse }
+    } catch (error) {
+      console.error('Failed to update email:', error)
+      return { success: false, error: 'Failed to update email' }
+    }
+  }
 }

@@ -188,6 +188,46 @@ export class MarkdownStorageService {
     }
   }
 
+  /**
+   * Save an anonymous (public mode) markdown. Creates or reuses a special anonymous user.
+   * Always forces the document to be public. Password (if provided) is allowed but still public.
+   */
+  static async saveAnonymousMarkdown(data: CreateMarkdownData): Promise<{ success: boolean; markdown?: SavedMarkdown; message?: string }> {
+    try {
+      // Upsert (find or create) an anonymous user placeholder
+      const anonymousEmail = 'anonymous@example.com'
+      const anonymousUser = await prisma.user.upsert({
+        where: { email: anonymousEmail },
+        update: {},
+        create: {
+          email: anonymousEmail,
+            username: 'anonymous',
+            displayName: 'Anonymous',
+            language: 'en',
+            theme: 'dark'
+        }
+      })
+
+      // Force public + sanitize
+      const payload: CreateMarkdownData = {
+        title: data.title,
+        content: data.content,
+        tags: data.tags || [],
+        isPublic: true, // always public for anonymous
+        password: data.password || undefined,
+        binId: data.binId
+      }
+
+      return await this.saveMarkdown(anonymousUser.id, payload)
+    } catch (error) {
+      console.error('Failed to save anonymous markdown:', error)
+      return {
+        success: false,
+        message: 'Failed to save anonymous document'
+      }
+    }
+  }
+
   static async updateMarkdown(id: string, userId: string, data: UpdateMarkdownData): Promise<{ success: boolean; markdown?: SavedMarkdown; message?: string }> {
     try {
       // Check if document exists and user has access
