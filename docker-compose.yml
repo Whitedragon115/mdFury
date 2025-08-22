@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: mdfury-app
     ports:
-      - "4682:3000"
+      - 4682:3000
     environment:
       # Database Configuration
       - DATABASE_URL=${DATABASE_URL}
