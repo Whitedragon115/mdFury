@@ -35,6 +35,7 @@ model User {
   markdowns Markdown[]
   accounts  Account[]
   sessions  Session[]
+  inviteCodes InviteCode[] // Invite codes used by this user
 
   @@map("users")
 }
@@ -94,4 +95,19 @@ model Markdown {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("markdowns")
+}
+
+model InviteCode {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  isUsed    Boolean  @default(false)
+  usedBy    String?
+  usedAt    DateTime?
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+
+  // Relations
+  usedByUser User? @relation(fields: [usedBy], references: [id])
+
+  @@map("invite_codes")
 }

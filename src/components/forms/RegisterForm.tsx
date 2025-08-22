@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useIntegratedAuth } from '@/hooks/useIntegratedAuth'
 import { LanguageSwitcher } from '@/components/common'
-import { UserPlus, Eye, EyeOff, Loader2, User, Mail, Lock, FileText } from 'lucide-react'
+import { UserPlus, Eye, EyeOff, Loader2, User, Mail, Lock, FileText, Key } from 'lucide-react'
 import OAuthButtons from './OAuthButtons'
 
 export default function RegisterForm() {
@@ -19,7 +19,8 @@ export default function RegisterForm() {
     email: '',
     password: '',
     confirmPassword: '',
-    displayName: ''
+    displayName: '',
+    inviteCode: ''
   })
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -36,7 +37,7 @@ export default function RegisterForm() {
     e.preventDefault()
     
     // Validation
-    if (!credentials.username.trim() || !credentials.email.trim() || !credentials.password.trim() || !credentials.confirmPassword.trim()) {
+    if (!credentials.username.trim() || !credentials.email.trim() || !credentials.password.trim() || !credentials.confirmPassword.trim() || !credentials.inviteCode.trim()) {
       toast.error(t('auth.allFieldsRequired'))
       return
     }
@@ -155,6 +156,24 @@ export default function RegisterForm() {
                 value={credentials.displayName}
                 onChange={(e) => handleInputChange('displayName', e.target.value)}
                 className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-blue-500"
+              />
+            </div>
+
+            {/* Invite Code */}
+            <div className="space-y-2">
+              <Label htmlFor="inviteCode" className="text-slate-300">
+                <Key className="w-4 h-4 inline mr-2" />
+                {t('auth.inviteCode')}
+              </Label>
+              <Input
+                id="inviteCode"
+                type="text"
+                placeholder={t('auth.inviteCodePlaceholder')}
+                value={credentials.inviteCode}
+                onChange={(e) => handleInputChange('inviteCode', e.target.value.toUpperCase())}
+                className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-blue-500 font-mono"
+                required
+                maxLength={12}
               />
             </div>
 

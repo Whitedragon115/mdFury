@@ -12,6 +12,8 @@
     "passwordPlaceholder": "Enter your password",
     "confirmPassword": "Confirm Password",
     "confirmPasswordPlaceholder": "Confirm your password",
+    "inviteCode": "Invite Code",
+    "inviteCodePlaceholder": "Enter your invite code",
     "loginButton": "Login",
     "signingIn": "Signing in",
     "register": "Create Account",
